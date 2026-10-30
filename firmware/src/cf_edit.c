@@ -22,6 +22,11 @@ static int cfe_va(uint32_t part) { return trk[part].eng_req == ENGI_VA; }
 #else
 static int cfe_va(uint32_t part) { (void)part; return 0; }
 #endif
+#if FELUCCA_808
+static int cfe_808(uint32_t part) { return trk[part].eng_req == ENGI_808; }   /* (TrapRoot: its 8 macros, 2 pages) */
+#else
+static int cfe_808(uint32_t part) { (void)part; return 0; }
+#endif
 static const eng_deep_t *cfe_deep(uint32_t part)
 {
     const eng_deep_t *d = ENGINES[eng_idx(trk[part].eng_req)]->deep;
@@ -334,11 +339,13 @@ static uint32_t cfe_npages(uint32_t part, uint32_t sec)
         return (sec < 6u ? 6u : sec == 6u ? 2u : 3u) + g;   /* (GLO: Voice, LFO, LFO 2, the LAYER's Glide) */
     if (cfe_va(part))
         return CFE_VA_SEC[sec % CFE_NSEC][1] + g;          /* (MOD's pages, the LAYER's Glide) */
+    if (cfe_808(part))
+        return 1u + g;
     return 1u;
 }
 static int cfe_glide_pg(uint32_t part, uint32_t sec, uint32_t pg)
 {
-    return part == CF_PART_LAYER && (cfe_fm6(part) || cfe_va(part)) && sec == CFE_NSEC - 1u &&
+    return part == CF_PART_LAYER && (cfe_fm6(part) || cfe_va(part) || cfe_808(part)) && sec == CFE_NSEC - 1u &&
            pg + 1u == cfe_npages(part, sec);
 }
 static uint32_t cfe_glide_ms(int g)              /* voice.c glide_set's TIME: 1 + g^2 / 8 control blocks */
@@ -388,6 +395,9 @@ static void cfe_glide_turn(uint32_t part, uint32_t col, int d)
 }
 static const char *cfe_key_name(uint32_t part, uint32_t sec)
 {
+    static const char *const K808[CFE_NSEC] = {"808", "SHP", "", "", "", "", "", ""};
+    if (cfe_808(part))
+        return K808[sec % CFE_NSEC];
     return cfe_va(part) ? CFE_VA_KEY[sec % CFE_NSEC] : CFE_SEC_KEY[sec % CFE_NSEC];
 }
 static const cfe_page_t *cfe_fm6_page(uint32_t sec, uint32_t pg)
@@ -447,6 +457,27 @@ static int cfe_info(uint32_t part, uint32_t sec, uint32_t pg, uint32_t col, char
             *bar = (int16_t)((v - c->min) * 255 / (c->max - c->min));
         return 1;
     }
+    if (cfe_808(part)) {                         /* the 808: section 808 MODEL DRIVE PUNCH SNAP, SHP DECAY TONE CLICK GLIDE */
+        const param_desc_t *pd;
+        const char *unit;
+        char t[12];
+        uint32_t i, k = sec * 4u + col;
+        int32_t v;
+        if (sec > 1u || col > 3u)
+            return 0;
+        pd = &ENGINES[ENGI_808]->edit[k];
+        for (i = 0; pd->label[i] && i < 11u; i++)
+            name[i] = pd->label[i];
+        name[i] = 0;
+        v = trk[part].p[P_E0 + k];
+        param_format(pd, v, t, &unit);
+        str_cpy(val, t, 14);
+        if (str_len(val) + str_len(unit) < 13u)
+            str_cpy(val + str_len(val), unit, 14 - str_len(val));
+        if (pd->max > pd->min && pd->fmt != F_ENUM)
+            *bar = (int16_t)((v - pd->min) * 255 / (pd->max - pd->min));
+        return 1;
+    }
     if (cfe_deep(part)) {
         const eng_deep_t *d = cfe_deep(part);
         uint32_t page = CFE_VA_SEC[sec % CFE_NSEC][0] + pg;
@@ -501,6 +532,17 @@ static void cfe_turn(uint32_t part, uint32_t sec, uint32_t pg, uint32_t col, int
         fm6_put_patch(part, v, 0);
         return;
     }
+    if (cfe_808(part)) {
+        uint32_t k = sec * 4u + col;
+        const param_desc_t *pd;
+        if (sec > 1u || col > 3u)
+            return;
+        pd = &ENGINES[ENGI_808]->edit[k];
+        fm1_irq_off();
+        trk[part].p[P_E0 + k] = (int16_t)cfe_dstep(pd, trk[part].p[P_E0 + k], d);
+        fm1_irq_on();
+        return;
+    }
     if (cfe_deep(part)) {
         const eng_deep_t *dp = cfe_deep(part);
         uint32_t page = CFE_VA_SEC[sec % CFE_NSEC][0] + pg;
@@ -522,6 +564,8 @@ static const char *cfe_page_title(uint32_t part, uint32_t sec, uint32_t pg)
         return "Glide";
     if (cfe_fm6(part))
         return cfe_fm6_page(sec, pg)->title;
+    if (cfe_808(part))
+        return sec == 0u ? "808" : sec == 1u ? "Shape" : "";
     if (cfe_deep(part)) {
         uint32_t page = CFE_VA_SEC[sec % CFE_NSEC][0] + pg;
         return page < cfe_deep(part)->npages ? cfe_deep(part)->pages[page].title : "";

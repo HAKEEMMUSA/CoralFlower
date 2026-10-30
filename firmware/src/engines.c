@@ -153,6 +153,9 @@ static uint32_t step_accents(const step_t *s) { (void)s; return 0; }
 #if FELUCCA_VA
 #include "eng_va.c"             /* VA: ChoralRoot's four-oscillator virtual analog (deep pages, its own patch) */
 #endif
+#if FELUCCA_808
+#include "eng_808.c"            /* 808: TrapRoot's trap bass (engine 11, NOISE's slot; docs/TRAP.md) */
+#endif
 
 /* the editor protocol, user presets and projects store these indices: append, never reorder */
 static const engine_t *const ENGINES[NENGINES] = {
@@ -209,6 +212,8 @@ static const engine_t *const ENGINES[NENGINES] = {
 #endif
 #if FELUCCA_NOISE
     &ENG_NOISE,                  /* 11 */
+#elif FELUCCA_808
+    &ENG_808,                    /* 11 (ENGI_808): TrapRoot's 808, in NOISE's slot */
 #else
     &ENG_GONE,                   /* 11: reserved (NOISE, retired: FELUCCA_NOISE 0) */
 #endif
@@ -275,6 +280,9 @@ static const uint8_t ENGINE_ORDER[NENG_SHOWN] = {
 #if FELUCCA_NOISE
     11,                          /* NOISE */
 #endif
+#if FELUCCA_808
+    ENGI_808,                    /* 808 (TrapRoot) */
+#endif
 #if FELUCCA_SLICE
     13,                          /* SLICE */
 #endif
@@ -290,7 +298,7 @@ static const uint8_t ENGINE_ORDER[NENG_SHOWN] = {
 /* the six retired in ChoralRoot 0.18 (PHASE, LOFI, VOICE, TRIO, NOISE, then PHYS: their records carry what an init sound
  * can honestly take: cr_ui.c cu_load_user) */
 #define ENG_RETIRED_018 ((FELUCCA_PHASE ? 0u : 1u << 2) | (FELUCCA_LOFI ? 0u : 1u << 3) | (FELUCCA_VOICE ? 0u : 1u << 5) | \
-                         (FELUCCA_TRIO ? 0u : 1u << 6) | (FELUCCA_NOISE ? 0u : 1u << 11) | \
+                         (FELUCCA_TRIO ? 0u : 1u << 6) | (FELUCCA_NOISE || FELUCCA_808 ? 0u : 1u << 11) | \
                          (FELUCCA_PHYS ? 0u : 1u << 9))
 #define ENG_RETIRED ((FELUCCA_FM4 ? 0u : 1u << ENGI_DIGITAL) | (FELUCCA_SAMPLE ? 0u : 1u << 4) | \
                      (FELUCCA_GRAIN ? 0u : 1u << 8) | (FELUCCA_DRUM ? 0u : 1u << ENGI_DRUM) | (FELUCCA_ANALOG ? 0u : 1u) | \

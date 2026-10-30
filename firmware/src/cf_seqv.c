@@ -21,20 +21,22 @@ static void sq_sprite(int x, int y, const char *const *row, int w, int h, sq_ink
             switch (ch) {
             case 'a': case 'b': case 'c': case 'd': c = sq_shade(k.ramp, ch - 'a'); break;
             case 'e': case 'f': c = sq_shade(k.eye, ch - 'e'); break;
-            case 'g': case 'h': case 'i': c = sq_shade(FL_R_LIME, ch - 'g'); break;
+            case 'g': case 'h': case 'i': c = sq_shade(FL_R_ROSE, ch - 'g'); break;
             default: continue;
             }
             fb_pset(x + i, y + j, c);
         }
 }
-static const char *const SQ_BLOOM7[7] = {".ab.ba.", "abbabba", "bbbebbb", ".aefea.", "bbbebbb", "abbabba", ".ab.ba."};
-static const char *const SQ_BLOOM5[5] = {".a.a.", "abeba", ".efe.", "abeba", ".a.a."};
-static const char *const SQ_TULIP7[7] = {".a.a.a.", ".ababa.", ".bbbbb.", ".bbbcb.", "..bcc..", "...h...", "...h..."};
-static const char *const SQ_TULIP5[5] = {"a.a.a", "abbba", ".bcb.", "..h..", "..h.."};
+/* TrapRoot's marks (CoralFlower's were flowers): a chord an ice diamond, a bass note an 808 drop, a drum a flame, the
+ * layer a star (the names kept: BLOOM chord, TULIP bass, DAISY drum, STAR layer) */
+static const char *const SQ_BLOOM7[7] = {".......", "..aaa..", ".abeba.", "abbbbba", ".bbbbb.", "..bcb..", "...c..."};
+static const char *const SQ_BLOOM5[5] = {".aaa.", "abeba", ".bbb.", "..c..", "....."};
+static const char *const SQ_TULIP7[7] = {"...a...", "..aba..", "..aba..", ".abbba.", ".bbebb.", ".bbbbb.", "..bcb.."};
+static const char *const SQ_TULIP5[5] = {"..a..", ".aba.", ".bbb.", "bbebb", ".bcb."};
 static const char *const SQ_STAR7[7] = {"...a...", "..aba..", ".abeba.", "abefeba", ".abeba.", "..aba..", "...a..."};
 static const char *const SQ_STAR5[5] = {"..a..", ".aba.", "abeba", ".aba.", "..a.."};
-static const char *const SQ_DAISY7[7] = {".a...a.", "..aba..", ".abeba.", "aaefeaa", ".abeba.", "..aba..", ".a...a."};
-static const char *const SQ_DAISY5[5] = {"a.a.a", ".beb.", "aefea", ".beb.", "a.a.a"};
+static const char *const SQ_DAISY7[7] = {"..a....", "..aa.a.", ".aba.a.", ".abbba.", "abbebba", "abbebba", ".bbcbb."};
+static const char *const SQ_DAISY5[5] = {".a...", ".ab.a", "abbba", "abeba", ".bcb."};
 static const char *const SQ_LOW3[3] = {".b.", "bcb", ".b."};   /* (a low daisy: its colour's darker steps) */
 
 /* the blooms' colours go round the circle of fifths, as the plant's (flora.c fl_build) */
@@ -74,12 +76,12 @@ static void sq_flower(int cx, int y, int w, int what, sq_ink_t k, int low)
     const char *const *spr = what == 3 ? (big ? SQ_STAR7 : SQ_STAR5) : what == 2 ? (big ? SQ_DAISY7 : SQ_DAISY5) :
                              what ? (big ? SQ_TULIP7 : SQ_TULIP5) :
                              (big ? SQ_BLOOM7 : SQ_BLOOM5);
-    sy = top + n - (what == 1 ? 2 : 0);          /* (the tulip's own stem is in its sprite) */
+    sy = top + n;                                /* (TrapRoot's marks: none has its stem in it) */
     if (gy > sy)
-        fb_rect(cx, sy, 1, gy - sy, sq_shade(FL_R_LIME, 1));
+        fb_rect(cx, sy, 1, gy - sy, sq_shade(FL_R_ROSE, 1));
     if (!low && gy - sy >= 3) {                  /* a leaf on the stem */
-        fb_pset(cx + 1, gy - 2, sq_shade(FL_R_LIME, 1));
-        fb_pset(cx + 2, gy - 3, sq_shade(FL_R_LIME, 0));
+        fb_pset(cx + 1, gy - 2, sq_shade(FL_R_ROSE, 1));
+        fb_pset(cx + 2, gy - 3, sq_shade(FL_R_ROSE, 0));
     }
     if (low)
         sq_sprite(cx - 1, top + 1, SQ_LOW3, 3, 3, k);
@@ -92,11 +94,11 @@ static void sq_flower(int cx, int y, int w, int what, sq_ink_t k, int low)
 static void sq_runner(int x0, int x1, int gy, const int *cx, int n, sq_ink_t k, int ends)
 {
     int i;
-    fb_hline(x0, gy - 1, x1 - x0 + 1, sq_shade(FL_R_LIME, 1));
+    fb_hline(x0, gy - 1, x1 - x0 + 1, sq_shade(FL_R_ROSE, 1));
     for (i = 0; i < n; i++) {
-        fb_pset(cx[i], gy - 2, sq_shade(FL_R_LIME, 1));
-        fb_pset(cx[i] - 1, gy - 3, sq_shade(FL_R_LIME, 0));
-        fb_pset(cx[i] + 1, gy - 3, sq_shade(FL_R_LIME, 0));
+        fb_pset(cx[i], gy - 2, sq_shade(FL_R_ROSE, 1));
+        fb_pset(cx[i] - 1, gy - 3, sq_shade(FL_R_ROSE, 0));
+        fb_pset(cx[i] + 1, gy - 3, sq_shade(FL_R_ROSE, 0));
     }
     if (!ends)                                   /* (it runs on into the next bar's row) */
         return;
@@ -141,7 +143,7 @@ static int sq_step_x(int i, int st) { return sq_cell_x(i, st) + 4; }
 static void sq_stalks(int start, int bars)
 {
     int y0 = SQG_Y0 + start * SQG_RH, y1 = SQG_Y0 + (start + bars) * SQG_RH - 2, b, side;
-    uint8_t c0 = FL_C(FL_R_LIME, 1), c1 = FL_C(FL_R_LIME, 2), ch = FL_C(FL_R_LIME, 0);
+    uint8_t c0 = FL_C(FL_R_ROSE, 1), c1 = FL_C(FL_R_ROSE, 2), ch = FL_C(FL_R_ROSE, 0);
     for (side = 0; side < 2; side++) {
         int x = side ? FB_W - 6 : 4, d = side ? -1 : 1, xi = side ? x - 1 : x + 2;
         fb_rect(x, y0, 1, y1 - y0, c0);
@@ -161,7 +163,7 @@ static void sq_bed(int b, int st, int on, uint32_t busy)   /* busy: bit i, step 
 {
     int y = SQG_Y0 + b * SQG_RH, gy = y + SQG_GND, i;
     if (on)
-        fb_hline(SQG_X0 - 2, gy, SQG_X1 - SQG_X0 + 3, FL_C(FL_R_LIME, 3));
+        fb_hline(SQG_X0 - 2, gy, SQG_X1 - SQG_X0 + 3, FL_C(FL_R_ROSE, 3));
     for (i = 0; i < st; i++) {
         int cx = sq_step_x(i, st), beat = (i * cs.beats) % st == 0;
         if ((busy >> i) & 1u)
@@ -170,13 +172,13 @@ static void sq_bed(int b, int st, int on, uint32_t busy)   /* busy: bit i, step 
             if (beat)
                 fb_pset(cx, gy - 1, FL_BG3);
         } else {
-            fb_rect(cx, gy - (beat ? 3 : 1), 1, beat ? 3 : 1, FL_C(FL_R_LIME, 2));
+            fb_rect(cx, gy - (beat ? 3 : 1), 1, beat ? 3 : 1, FL_C(FL_R_ROSE, 2));
             if (beat) {                          /* (a beat: a tuft, its tips lit) */
-                fb_pset(cx, gy - 4, FL_C(FL_R_LIME, 1));
-                fb_pset(cx + 1, gy - 2, FL_C(FL_R_LIME, 2));
-                fb_pset(cx - 1, gy - 2, FL_C(FL_R_LIME, 2));
-                fb_pset(cx + 2, gy - 3, FL_C(FL_R_LIME, 1));
-                fb_pset(cx - 2, gy - 3, FL_C(FL_R_LIME, 1));
+                fb_pset(cx, gy - 4, FL_C(FL_R_ROSE, 1));
+                fb_pset(cx + 1, gy - 2, FL_C(FL_R_ROSE, 2));
+                fb_pset(cx - 1, gy - 2, FL_C(FL_R_ROSE, 2));
+                fb_pset(cx + 2, gy - 3, FL_C(FL_R_ROSE, 1));
+                fb_pset(cx - 2, gy - 3, FL_C(FL_R_ROSE, 1));
             }
         }
     }
@@ -282,12 +284,12 @@ static int sq_playing_here(void) { return cf_sn.sq_on && cf_sn.sq_pat == squ.pat
 static void sq_firefly(int x, int y)
 {
     fb_rect(x, y, 2, 2, FL_C(FL_R_SAND, 0));
-    fb_pset(x - 1, y, FL_C(FL_R_LIME, 0));
-    fb_pset(x + 2, y + 1, FL_C(FL_R_LIME, 0));
-    fb_pset(x, y - 1, FL_C(FL_R_LIME, 1));
-    fb_pset(x + 1, y + 2, FL_C(FL_R_LIME, 1));
-    fb_pset(x - 3, y + 1, FL_C(FL_R_LIME, 1));   /* (its trail) */
-    fb_pset(x - 5, y + 1, FL_C(FL_R_LIME, 2));
+    fb_pset(x - 1, y, FL_C(FL_R_ROSE, 0));
+    fb_pset(x + 2, y + 1, FL_C(FL_R_ROSE, 0));
+    fb_pset(x, y - 1, FL_C(FL_R_ROSE, 1));
+    fb_pset(x + 1, y + 2, FL_C(FL_R_ROSE, 1));
+    fb_pset(x - 3, y + 1, FL_C(FL_R_ROSE, 1));   /* (its trail) */
+    fb_pset(x - 5, y + 1, FL_C(FL_R_ROSE, 2));
 }
 static void sq_play_marks(const sq_pat_t *p, uint32_t trk)
 {
@@ -319,6 +321,69 @@ static void sq_ev_name(const sq_pat_t *p, uint32_t i, char *b)
         return;
     }
     cf_chord_name(sqv.root[i], sqv.mask[i], -1, &cu_spell, b);
+}
+
+/* TrapRoot: the DRUMS editor as ChoralRoot's step editor (the owner's pick of TrapRoot's first screens): the drum
+ * picked big in the middle, its neighbours either side, a dot for each drum; a grid of four drums by the bar's steps
+ * (the picked one bright, the others dim; each drum its own colour, the beats' columns a shade lighter), the step
+ * playing lit; under it the drum and the bar, the bars as tabs. The keys and knobs are CoralFlower's, as before */
+static void sq_drums13(const sq_pat_t *p)
+{
+    int st = (int)sq_dsteps(), nb = (int)sq_tbars(p, SQ_DRUMS), l0, r, i, gx = 26, cw, gy = Y_VIEW + 52, rh = 13;
+    uint32_t lane = squ.lane % SQ_NLANE;
+    char b[32];
+    if (nb < 1)
+        nb = 1;
+    cw = (238 - gx) / (st > 0 ? st : 16);
+    /* the names: the picked drum big in its colour, the ones either side small */
+    {
+        const char *nm = sq_lane_name(lane);
+        int w = fb_text_w(&CF_FONT_UI, nm, 2);
+        fb_text(&CF_FONT_UI, 120 - w / 2, Y_VIEW + 15, nm, FL_C(sq_lane_ink(lane).ramp, 0), 2);
+        if (lane > 0u)
+            fb_text(&CF_FONT_UI, 4, Y_VIEW + 21, sq_lane_name(lane - 1u), FL_INK3, 1);
+        if (lane + 1u < SQ_NLANE)
+            fb_text_r(&CF_FONT_UI, 236, Y_VIEW + 21, sq_lane_name(lane + 1u), FL_INK3, 1);
+        for (i = 0; i < (int)SQ_NLANE; i++)      /* (a dot a drum, the picked one lit) */
+            fb_rect(120 - (int)SQ_NLANE * 3 + i * 6, Y_VIEW + 43, 4, 2,
+                    (uint32_t)i == lane ? FL_C(sq_lane_ink(lane).ramp, 0) : FL_BG3);
+    }
+    /* the grid: four drums, the picked one among them */
+    l0 = (int)lane - 1;
+    if (l0 > (int)SQ_NLANE - 4)
+        l0 = (int)SQ_NLANE - 4;
+    if (l0 < 0)
+        l0 = 0;
+    for (r = 0; r < 4; r++) {
+        uint32_t l = (uint32_t)(l0 + r), hits = p->hit[l][squ.bar % SQ_BARS];
+        int y = gy + r * rh, cur = l == lane;
+        uint8_t ink = FL_C(sq_lane_ink(l).ramp, cur ? 0 : 2);
+        draw_drum_icon(gx - 13, y + 5, sq_lane_pic(l, p->dkit[l]), cur ? FL_INK : FL_INK3);
+        for (i = 0; i < st; i++) {
+            int x = gx + i * cw;
+            uint8_t c = (hits >> i) & 1u ? ink : cur ? (i % 4 == 0 ? FL_BG3 : FL_BG2) : (i % 4 == 0 ? FL_BG2 : FL_BG1);
+            fb_rect(x, y, cw - 1, rh - 2, c);
+        }
+        if (cur)                                 /* (the picked drum's row framed) */
+            fb_rframe(gx - 2, y - 2, st * cw + 3, rh + 2, C_ACC(0));
+    }
+    if (sq_playing_here() && (int)sq_trk_bar(p, SQ_DRUMS, cf_sn.sq_n) == (int)squ.bar) {   /* (the step playing) */
+        int k = (int)(cf_sn.sq_t * (uint32_t)st / cf_sn.sq_bt);
+        fb_rect(gx + k * cw, gy - 4, cw - 1, 2, FL_C(FL_R_FIRE, 1));
+    }
+    /* under it: the drum and the bar, the bars as tabs */
+    str_cpy(b, sq_lane_name(lane), sizeof b);
+    str_cpy(b + str_len(b), ", bar ", sizeof b - str_len(b));
+    kint(b + str_len(b), (int)squ.bar + 1, 0);
+    fb_text(&CF_FONT_UI, 8, gy + 4 * rh + 4, b, FL_INK, 1);
+    for (i = 0; i < nb && i < (int)SQ_BARS; i++) {
+        char t[3];
+        int x = 236 - (nb - i) * 14, on = i == (int)squ.bar;
+        t[0] = (char)('1' + i);
+        t[1] = 0;
+        fb_rbox(x, gy + 4 * rh + 3, 12, 12, 2, on ? C_ACC(0) : cf_panel(1));
+        fb_text_c(&CF_FONT_UI, x + 6, gy + 4 * rh + 3, t, on ? FL_INK : FL_INK3, 1);
+    }
 }
 
 static void draw_sq_track(void)
@@ -375,7 +440,14 @@ static void draw_sq_track(void)
     } else {
         char d[24];
         fb_signs(c, d, sizeof d);
-        fb_text_r(&CF_FONT_UI, 232, Y_VIEW + 4, d, drums ? FL_C(sq_lane_ink(squ.lane).ramp, 0) : C_ACC(0), 1);
+        if (!drums || squ.ocpy || squ.cpy)       /* (TrapRoot: the DRUMS editor names its drum big, sq_drums13) */
+            fb_text_r(&CF_FONT_UI, 232, Y_VIEW + 4, d, drums ? FL_C(sq_lane_ink(squ.lane).ramp, 0) : C_ACC(0), 1);
+    }
+    if (drums && !squ.ocpy && !squ.cpy) {        /* (TrapRoot: the step editor's look; copying keeps the bars' view) */
+        static const char *const H[2] = {"GLO", "help"};
+        sq_drums13(p);
+        draw_hints(H, 1);
+        return;
     }
     sq_stalks((int)sq_ts(p, squ.trk), (int)sq_tbars(p, squ.trk));   /* (the track's own bars: the ones it plays, round) */
     for (bar = 0; bar < (int)SQ_BARS; bar++) {

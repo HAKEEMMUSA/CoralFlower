@@ -83,7 +83,8 @@ static void view_drum(int x0)
     steps = nb * sd;
     for (l = 0; l < SQ_NLANE; l++)
         nl += y->lane[l] != 0;
-    row = nl <= 4u ? 16 : 13;
+    nl += y->b808 != 0;                          /* (TrapRoot: the 808 line, a row of its own under the drums) */
+    row = nl <= 4u ? 16 : nl <= 6u ? 13 : 9;
     for (l = 0; l < SQ_NLANE; l++) {
         int yr = yt + k * row;
         if (!y->lane[l])
@@ -99,11 +100,39 @@ static void view_drum(int x0)
                 int s = (int)(b * sd + i), cw = gw / (int)steps, cx = gx + s * gw / (int)steps + cw / 2;
                 if (i & 1u)
                     cx += (int)dm_swing(r) * cw / 200;
-                if ((m >> i) & 1u)
+                if ((m >> i) & 1u) {
+                    uint32_t rn = dm_roll(dm_char(r, l, b, i));
                     sq_flower(cx, yr, cw, 2, sq_lane_ink(l), 0);
-                else
+                    if (rn)                      /* (a roll: a bar over the flame, as long as its hits) */
+                        fb_rect(cx - (int)rn / 2, yr + 1, (int)rn, 1, FL_C(FL_R_FIRE, 0));
+                } else {
                     fb_rect(cx, yr + SQG_GND, 1, 1, FL_BG3);
+                }
             }
+        }
+    }
+    if (y->b808) {                               /* the 808 line: a drop a hit, a slide joined to the note before */
+        int yr = yt + k * row, px = -1;
+        sq_ink_t ink;
+        ink.ramp = FL_R_ROSE;
+        ink.eye = FL_R_FIRE;
+        k++;
+        fb_rect(x0 - 6, yr + 6, 26, 7, FL_BG);
+        fb_text(&CF_FONT_UI, x0 - 4, yr + 3, "808", FL_INK2, 1);
+        fb_hline(gx, yr + SQG_GND + 1, gw, FL_BG3);
+        for (i = 0; i < steps && y->b808[i]; i++) {
+            int cw = gw / (int)steps, cx = gx + (int)i * gw / (int)steps + cw / 2;
+            char ch = y->b808[i];
+            if ((i % sd) & 1u)
+                cx += (int)dm_swing(r) * cw / 200;
+            if (ch != 'x' && ch != 's') {
+                fb_rect(cx, yr + SQG_GND, 1, 1, FL_BG3);
+                continue;
+            }
+            if (ch == 's' && px >= 0)
+                fb_hline(px, yr + SQG_GND - 1, cx - px, FL_C(FL_R_ROSE, 1));
+            sq_flower(cx, yr, cw, 1, ink, 0);
+            px = cx;
         }
     }
     if (nb > 1u) {                               /* (the second bar begins: a dashed line) */

@@ -75,6 +75,14 @@
 #ifndef FELUCCA_NOISE
 #define FELUCCA_NOISE 1          /* the NOISE engine (eng_noise.c), engine 11; ChoralRoot: 0, engine 11 retired */
 #endif
+#ifndef FELUCCA_808
+#define FELUCCA_808 0            /* TrapRoot's 808 engine (eng_808.c, docs/TRAP.md): engine 11, NOISE's slot (so not with
+                                  * FELUCCA_NOISE); coralflower.c and the emulator set 1 */
+#endif
+#if FELUCCA_808 && FELUCCA_NOISE
+#error "FELUCCA_808 takes engine 11, NOISE's slot: build it with FELUCCA_NOISE 0"
+#endif
+#define ENGI_808 11u             /* engines.c ENGINES[11] (FELUCCA_808) */
 #ifndef FELUCCA_PHYS
 #define FELUCCA_PHYS 1           /* the PHYS engine (eng_phys.c, phys_dsp.c, phys_symp.c), engine 9; ChoralRoot: 0 since 0.18,
                                   * engine 9 retired (its records load as the VA's init sound, as the five's above) */
@@ -100,7 +108,8 @@
 #endif
 #define ENGI_DIGITAL 1u          /* reserved without FELUCCA_FM4: never selectable (eng_ok), its sounds load as FM6 */
 #define NENG_SHOWN (NENGINES - !FELUCCA_FM4 - !FELUCCA_SAMPLE - !FELUCCA_GRAIN - !FELUCCA_DRUM - !FELUCCA_ANALOG - \
-                    !FELUCCA_PHASE - !FELUCCA_LOFI - !FELUCCA_VOICE - !FELUCCA_TRIO - !FELUCCA_NOISE - !FELUCCA_PHYS)
+                    !FELUCCA_PHASE - !FELUCCA_LOFI - !FELUCCA_VOICE - !FELUCCA_TRIO - !(FELUCCA_NOISE || FELUCCA_808) - \
+                    !FELUCCA_PHYS)
                                  /* the engines one can pick: PRESETS, the EDIT layer, the editor, in the display order
                                   * of engines.c ENGINE_ORDER (the retired slots are not among them) */
 #define UP_SLOTS 32u             /* user presets (upreset.c) */

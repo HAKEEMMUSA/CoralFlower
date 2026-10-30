@@ -50,6 +50,7 @@ static void dm_defaults(void)
     memset(dmr.swing, 0xFF, sizeof dmr.swing);
     memset(dmr.pos, 0xFF, sizeof dmr.pos);
     dmr.magic = DM_MAGIC;
+    dmr.last = 1;                                /* (TrapRoot: PLAY on HOME plays a rhythm, the first: Rage) */
 }
 /* rc3's record: its rhythms had the ids 0 .. 28 in its list's order (cf_drum.c kept them), so its tweaks are by id
  * already; the rhythm stood on was a place in a TIME SIG's list: 4/4's 0 .. 19, then two each in 3/4, 2/4, 5/4, 6/8

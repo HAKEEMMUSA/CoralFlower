@@ -28,7 +28,7 @@ static const char *const SCR_NAME[SCR_N] = {"HOME", "CHORD", "ENVELOPE", "BASS",
 typedef struct { const char *name; uint8_t ramp; uint32_t light; } cf_theme_t;   /* light: another lightest step
                                                                                      * (0xRRGGBB), 0 = the ramp's */
 static const cf_theme_t CF_THEMES[] = {
-    {"Coral", FL_R_ROSE, 0}, {"Amber", FL_R_FIRE, 0}, {"Peach", FL_R_PEACH, 0},
+    {"Blood", FL_R_ROSE, 0}, {"Amber", FL_R_FIRE, 0}, {"Peach", FL_R_PEACH, 0},
     {"Lime", FL_R_LIME, 0xB0E34Cu},            /* (the lime ramp's top turned greener: the UI's own) */
     {"Jade", FL_R_JADE, 0x5BB42Fu},            /* (the jade ramp starts yellow-green: the leaf green instead) */
     {"Sky", FL_R_SEA, 0}, {"Orchid", FL_R_ORCHID, 0}, {"Bone", FL_R_SAND, 0}, {"Mist", FL_R_SAGE, 0},
@@ -107,8 +107,8 @@ static void cs_defaults(cf_set_t *s)
     s->bass_level = 96;
     s->metro_level = 0;
     s->beats = 4;
-    s->bpm = 100;
-    s->accent = 3;                   /* Lime */
+    s->bpm = 150;                                 /* (TrapRoot: trap and rage tempo) */
+    s->accent = 0;                   /* Blood (TrapRoot; CoralFlower: 3, Lime) */
     s->env_link = 1;
     s->midi_out = 1;
     s->ch_chord = 0;

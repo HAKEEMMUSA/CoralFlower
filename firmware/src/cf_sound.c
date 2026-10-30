@@ -18,7 +18,11 @@ static uint8_t cf_snd_gen[3];                    /* each part's sound loads and 
                                                   * (cf_settings.c keeps a part's unsaved edits with the sound they were
                                                   * made on; another sound loaded, they are gone) */
 
-static const uint8_t CF_ENGINES[] = {ENGI_FM6,
+static const uint8_t CF_ENGINES[] = {
+#if FELUCCA_808
+                                     ENGI_808,   /* TrapRoot: the 808s first in the bass list */
+#endif
+                                     ENGI_FM6,
 #if FELUCCA_VA
                                      ENGI_VA,
 #endif
@@ -32,6 +36,10 @@ static const char *cf_engine_name(uint32_t e)
 {
     if (e == ENGI_FM6)
         return "FM";
+#if FELUCCA_808
+    if (e == ENGI_808)
+        return "808";
+#endif
 #if FELUCCA_VA
     if (e == ENGI_VA)
         return "VA";
@@ -69,6 +77,10 @@ static int cf_named(const cf_named_t *t, uint32_t n, uint32_t e, const char *nam
 }
 static int cf_fac_part(uint32_t e, uint32_t f)   /* factory preset f of engine e */
 {
+#if FELUCCA_808
+    if (e == ENGI_808)                           /* (TrapRoot: every 808 is a bass) */
+        return 1;
+#endif
     const char *nm = ENGINES[e % NENGINES]->presets[f].name;
     if (cf_named(CF_DROP, NELEM(CF_DROP), e, nm))
         return -1;
@@ -78,7 +90,7 @@ static int cf_ent_part(uint32_t e, uint32_t pos)
 {
     pool_ent_t en = pool_entry(e, pos);
     if (en.kind == PK_INIT)
-        return 2;
+        return FELUCCA_808 && e == ENGI_808 ? 1 : 2;   /* (the 808's INIT: a bass) */
     if (en.kind == PK_USER) {
         int32_t v = up_value(up_rec(en.slot), P_VOICE);
         if (up_rec(en.slot)->note[14] == CB_LAYER_MARK)   /* (a LAYER's sound: a chord sound, whatever its voice) */
@@ -159,6 +171,11 @@ static void cf_part_voice(track_t *t, uint32_t part)
     t->p[P_VOICE] = V_POLY;
     if (part == CF_PART_BASS)
         t->p[P_GLIDE] = 0;                       /* (the chord sound's is HOME's GLIDE: cf_play.c cfp_glide_g) */
+#if FELUCCA_808
+    if (part == CF_PART_BASS && t->eng_req == ENGI_808)
+        t->p[P_VOICE] = V_LEGATO;                /* (TrapRoot: the 808 is one voice that slides, eng_808.c GLIDE; no
+                                                  * octaver note under it) */
+#endif
 }
 
 /* engine e's factory preset pi into part (the sound only, not the part's own parameters) */

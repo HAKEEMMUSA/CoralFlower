@@ -1,5 +1,9 @@
 # CoralFlower
 
+> **This tree is TrapRoot**: CoralFlower for trap, rage and plugg production, with an 808 engine, trap rhythms with
+> hat rolls and an 808 line, the X Rage kit, rage leads, a step-grid DRUMS editor and a fallen angel in the flower's
+> place, who turns demonic as the song plays. See [docs/TRAP.md](docs/TRAP.md). Untested on hardware.
+
 **Your M-VAVE FM-1, made for chords.** CoralFlower is free firmware for the FM-1. Press a chord key, and every note
 you play becomes a whole chord, with a bass underneath. While you play, a pixel flower grows from your chords.
 

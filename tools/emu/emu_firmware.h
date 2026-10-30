@@ -73,6 +73,9 @@ static void cf_boot_note(void);    /* as coralflower.c */
 #ifndef FELUCCA_NOISE
 #define FELUCCA_NOISE 0
 #endif
+#ifndef FELUCCA_808
+#define FELUCCA_808 1             /* TrapRoot: the 808 engine in NOISE's slot (eng_808.c) */
+#endif
 #ifndef FELUCCA_PHYS
 #define FELUCCA_PHYS 0                                /* as choralroot.c: PHYS retired (0.18) */
 #endif
@@ -143,7 +146,7 @@ static void mix_block(int32_t *out, uint32_t n)        /* the audio ISR's block:
 #include "../../firmware/src/storage.c"
 #include "../../firmware/src/cr_bank.c"               /* upreset.c (the flash file), the pools per engine */
 #include "../../firmware/src/flora/flora_canvas.c"
-#include "../../firmware/src/flora/flora.c"
+#include "../../firmware/src/flora/angel.c"   /* (TrapRoot: the fallen angel in the plant's place, flora.c's calls) */
 #define CF_PUMP() cf_ui_pump()
 static void cf_ui_pump(void);
 #include "../../firmware/src/cf_fb.c"

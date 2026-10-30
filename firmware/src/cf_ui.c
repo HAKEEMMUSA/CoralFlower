@@ -784,7 +784,7 @@ static void ui_open(uint32_t scr)
         ui_ctx_from_track(squ.trk);
     cu.scr = (uint8_t)(scr == was && scr != SCR_HOME ? SCR_HOME : scr);
     if (cu.scr == SCR_SEQ && was != SCR_SEQ)
-        dm_seq_to = 0;                           /* (the carousel starts on the SEQUENCER: SEQ twice opens it, as before) */
+        dm_seq_to = 1;                           /* (TrapRoot: the carousel starts on the drum machine: SEQ twice opens it) */
     if (cu.scr == SCR_SEL && cf_is_off(&cs.chord, cu.sel_btn))
         cu.sel_btn = sel_first();
     if ((was == SCR_SEQ || sq_screen(was)) != (cu.scr == SCR_SEQ || sq_screen(cu.scr)))
@@ -1751,6 +1751,28 @@ static void cf_feed_plant(uint32_t dt)
             lvl = (uint32_t)e;
     }
     flora_set_level(&flo, (uint16_t)(lvl > 32767u ? 65535u : lvl * 2u));
+    /* TrapRoot: she falls while the song plays (a rhythm, a pattern, the song); the 808 (the bass part's attack) and
+     * the kick jolt her and her fire */
+    flora_set_playing(&flo, cf_sn.dm_on || cf_sn.sq_on);
+    {
+        static uint32_t bass_was, kick_t;
+        uint32_t lb = 0;
+        for (i = 0; i < NVOICE; i++) {
+            int32_t e = trk[CF_PART_BASS].v[i].active ? trk[CF_PART_BASS].v[i].env_out : 0;
+            if (e < 0)
+                e = -e;
+            if ((uint32_t)e > lb)
+                lb = (uint32_t)e;
+        }
+        if (lb > bass_was + 6000u)
+            flora_thump(&flo, (uint8_t)(lb > 32000u ? 127u : lb / 252u));
+        bass_was = lb;
+        if (cf_sn.sq_lane_t[0] != kick_t) {
+            if (kick_t)
+                flora_thump(&flo, 60);
+            kick_t = cf_sn.sq_lane_t[0];
+        }
+    }
     flora_tick(&flo, dt);
 }
 
@@ -1789,9 +1811,15 @@ static void cf_ui_init(void)
     if (cfs_loaded) {                            /* the sounds the parts had before the power-off */
         cf_snd_load_index(CF_PART_CHORD, cs.snd[0]);
         cf_snd_load_index(CF_PART_BASS, cs.snd[1]);
-    } else {                                     /* a new unit: FM ORGAN for the chords (the owner's pick), a round bass */
+    } else {                                     /* a new unit (TrapRoot): RAGE SAW chords over the CARSON 808 */
+#if FELUCCA_VA
+        if (!cf_snd_find(CF_PART_CHORD, ENGI_VA, "RAGE SAW"))
+#endif
         if (!cf_snd_find(CF_PART_CHORD, ENGI_FM6, "ORGAN"))
             cf_snd_load_index(CF_PART_CHORD, 1);
+#if FELUCCA_808
+        if (!cf_snd_find(CF_PART_BASS, ENGI_808, "CARSON"))
+#endif
 #if FELUCCA_VA
         if (!cf_snd_find(CF_PART_BASS, ENGI_VA, "DEEP SUB"))
 #endif
@@ -1802,7 +1830,7 @@ static void cf_ui_init(void)
     if (cs.snd_layer != 0xFFFFu)                 /* the LAYER's sound; a new unit's: a soft lead, else the second sound */
         cf_snd_load_index(CF_PART_LAYER, cs.snd_layer);
 #if FELUCCA_VA
-    else if (!cf_snd_find(CF_PART_LAYER, ENGI_VA, "SOFT LEAD"))
+    else if (!cf_snd_find(CF_PART_LAYER, ENGI_VA, "KEN LEAD") && !cf_snd_find(CF_PART_LAYER, ENGI_VA, "SOFT LEAD"))
 #else
     else
 #endif

@@ -18,11 +18,17 @@ typedef struct {
     uint8_t bpm;                 /* the tempo its style lives at (shown, never set: the tempo is the user's) */
     const char *lane[SQ_NLANE];  /* each drum's hits, bar after bar; 0: the drum is not in it */
     uint8_t lev[SQ_NLANE];       /* .. its level, 0..100 % (a pattern's dlev) */
+    /* TrapRoot: the 808 line (0: none). b808 a char a step as the lanes ('x' a hit, 's' a slide into it from the last
+     * note); b808n its notes a char a step: 'm' the bass the keys play, 'n' +1 .. 'y' +12, 'l' -1 .. 'a' -12 ('.' 'm').
+     * While such a rhythm plays the bass part plays this line (cf_play.c cfp_sync: the keys only set its note) */
+    const char *b808, *b808n;
 } dm_rhythm_t;
+/* TrapRoot: a hit's character in a lane: 'x' a hit, 'X' an accent, 'o' a ghost note, '2' '3' '4' '6' '8' a roll of
+ * that many hits inside the step (the trap hat rolls; the pattern's DRUMS keep its first hit) */
 
 /* the kits by name (SQ_KITS' order) */
 enum { DMK_STD, DMK_808, DMK_909, DMK_TIGHT, DMK_BOOM, DMK_LOFI, DMK_HAND, DMK_CRUSH, DMK_XCLUB, DMK_XDEEP, DMK_XLOFI,
-       DMK_XLIVE, DMK_XTECH, DMK_XBREAK };
+       DMK_XLIVE, DMK_XTECH, DMK_XBREAK, DMK_XRAGE };
 
 /* 4/4: the owner's list for rc4 ("моя прошивка больше ориентирована на более современные жанры"; rc3's Rock, Bossa,
  * Reggae, Swing, Motown, Dub, Afro, Ballad, Punk, Disco, Trap and Samba gone; "Все, решу на слух": every one proposed
@@ -32,6 +38,55 @@ enum { DMK_STD, DMK_808, DMK_909, DMK_TIGHT, DMK_BOOM, DMK_LOFI, DMK_HAND, DMK_C
  * theirs is dropped, cf_dmui.c) */
 static const dm_rhythm_t DM_RHY[] = {
     /* 4/4: 16 steps a bar */
+    /* TrapRoot: trap, rage and plugg first (ids 48 on). The hats roll ('3' '4' '6' '8'), the 808 line follows the chord
+     * (b808 / b808n, above); the kit is X Rage (drum_kits.c), the kick short: the 808 is the low end */
+    {"Rage", 48, 4, 2, DMK_XRAGE, 0, 160,
+     {[DM_K] = "x.....x...x....." "x..x..x.....x...", [DM_S] = "........X......." "........X.......",
+      [DM_C] = "........X......." "........X.......", [DM_H] = "x.x.x.x.x.x.x.3." "x.x.x.x.x.x.x4x6",
+      [DM_O] = "...............x" "...............x", [DM_X] = "X..............." "................"},
+     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 80, [DM_H] = 55, [DM_O] = 50, [DM_X] = 40},
+     "x.....x...x....." "x..x..x.....s...", "mmmmmmmmmmmmmmmm" "kkkkkkkkkkkkttmm"},
+    {"Atlanta", 49, 4, 2, DMK_XRAGE, 0, 140,
+     {[DM_K] = "x......x..x....." "x......x.x......", [DM_S] = "........X......." "........X.......",
+      [DM_C] = "........X......." "........X.......", [DM_H] = "xxxxxxxxxxxx3.xx" "xxxxxxxxxx4.xxx6",
+      [DM_R] = "..............o." "..............o."},
+     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 85, [DM_H] = 45, [DM_R] = 40},
+     "x......x..x....." "x......x.s......", "mmmmmmmmmmmmmmmm" "hhhhhhhhhhjjjjjj"},
+    {"Carti", 50, 4, 2, DMK_XRAGE, 52, 150,
+     {[DM_K] = "x.........x....." "x......x..x.....", [DM_S] = "........X......." "........X.......",
+      [DM_C] = "........X......." "........X......o", [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.3.x.x.",
+      [DM_O] = "..x.......x....." "..x.......x.....", [DM_R] = "...x.......x...x" ".......x....x..."},
+     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 80, [DM_H] = 50, [DM_O] = 45, [DM_R] = 40},
+     "x.........s....." "x......x..s.....", "mmmmmmmmmmyymmmm" "jjjjjjjhhhmmmmmm"},
+    {"Opium", 51, 4, 2, DMK_XRAGE, 0, 165,
+     {[DM_K] = "x..x..x...x.x..." "x..x..x.x.x.x...", [DM_S] = "....X.......X..." "....X.......X...",
+      [DM_C] = "....X.......X..." "....X.......X...", [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.6.",
+      [DM_X] = "X..............." "X..............."},
+     {[DM_K] = 100, [DM_S] = 85, [DM_C] = 80, [DM_H] = 50, [DM_X] = 40},
+     "x..x..x...x....." "x..x..s...x.....", "mmmmmmmmmmmmmmmm" "kkkkkkttttmmmmmm"},
+    {"Plugg", 52, 4, 2, DMK_XRAGE, 54, 145,
+     {[DM_K] = "x.....x........." "x.....x...x.....", [DM_C] = "........X......." "........X.......",
+      [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.x.", [DM_R] = "...x.......x...x" "...x.......x.o.."},
+     {[DM_K] = 95, [DM_C] = 85, [DM_H] = 45, [DM_R] = 40},
+     "x.....x........." "x.....s...x.....", "mmmmmmmmmmmmmmmm" "jjjjjjtttthhhhhh"},
+    {"Memphis", 53, 4, 2, DMK_XRAGE, 56, 135,
+     {[DM_K] = "x..x..x...x.x..." "x..x..x...x.x...", [DM_S] = "........X......." "........X.......",
+      [DM_H] = "xxxxxxxxxxxxxxxx" "xxxxxxxxxxxx4.xx", [DM_O] = "......x.......x." "......x.......x.",
+      [DM_B] = "x..x..x.x..x..x." "x..x..x.x..x.x.."},
+     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 40, [DM_O] = 45, [DM_B] = 45},
+     "x.........x....." "x.........x.....", "mmmmmmmmmmmmmmmm" "rrrrrrrrrrkkkkkk"},
+    {"TrapDrill", 54, 4, 2, DMK_XRAGE, 0, 142,
+     {[DM_K] = "x.........x....." "....x.....x.....", [DM_S] = "........X......." "....X...X.......",
+      [DM_H] = "x..x..x.x..x..x." "x..x..x.x.3.4.x.", [DM_R] = "......x.......x." "......x...x.....",
+      [DM_X] = "X..............." "................"},
+     {[DM_K] = 100, [DM_S] = 95, [DM_H] = 50, [DM_R] = 40, [DM_X] = 40},
+     "x.........s....." "s.......x...s...", "mmmmmmmmmmrrrrrr" "rrttttttttthhhhm"},
+    {"Rolls", 55, 4, 2, DMK_XRAGE, 0, 150,
+     {[DM_K] = "x.........x....." "x.........x.x...", [DM_S] = "........X......." "........X.......",
+      [DM_C] = "........X......." "........X.......", [DM_H] = "x.x.3.x.4.x.x6x." "x3x.x.4.x8x.6.88",
+      [DM_O] = "..............x." "..............x."},
+     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 80, [DM_H] = 50, [DM_O] = 45},
+     "x.........x....." "x.........s.....", "mmmmmmmmmmmmmmmm" "hhhhhhhhhhjjjjjj"},
     {"Pop", 1, 4, 1, DMK_XLOFI, 0, 110,
      {[DM_K] = "x.....x.x.......", [DM_S] = "....x.......x...", [DM_C] = "....x.......x...",
       [DM_H] = "x.x.x.x.x.x.x.x."},
@@ -201,23 +256,139 @@ static uint32_t dmp_tick_of(uint32_t i)          /* where step i sounds: every s
         t += dmp.swing * (bt / sd) / 200u;
     return t;
 }
+/* TrapRoot: a step's character (above: x X o, a roll's count), the velocity it strikes with */
+static char dm_char(uint32_t r, uint32_t l, uint32_t b, uint32_t i)
+{
+    const dm_rhythm_t *y = &DM_RHY[r % DM_N];
+    const char *s = y->lane[l % SQ_NLANE];
+    uint32_t sd = dm_steps(y->beats), k;
+    if (!s || b >= y->bars || i >= sd)
+        return '.';
+    for (k = 0; k < b * sd + i; k++)             /* (a lane shorter than its bars: rests after it) */
+        if (!s[k])
+            return '.';
+    return s[k] ? s[k] : '.';
+}
+static uint32_t dm_vel(char c) { return c == 'X' ? 124u : c == 'o' ? 56u : 100u; }
+static uint32_t dm_roll(char c) { return c >= '2' && c <= '8' ? (uint32_t)(c - '0') : 0u; }
+
+/* the rolls under way: lane l's hits k .. n - 1 of the step that began at t0 (ticks) and lasts len */
+static struct { uint8_t n, k; uint16_t t0, len; } dmroll[SQ_NLANE];
+
+static void dm_strike(uint32_t l, uint32_t vel)
+{
+    trk_note_on(&trk[CF_PART_DRUM], SQ_LANE_NOTE[l], vel);
+    cfp_midi(0x90u, cfp_ch(CF_PART_DRUM), SQ_LANE_NOTE[l], vel);
+    sqp.doff |= (uint16_t)(1u << l);
+    sqp.lane_t[l] = cf_now_ms;
+}
+
+/* ------------------------------------------------- TrapRoot: the 808 line --- */
+/* the bass part plays the rhythm's 808 line: each hit the note the keys' bass would play (dm8.root: the last chord's,
+ * kept while no key is down; none yet: the key's tonic in the second octave) plus the step's interval; a slide step
+ * glides into it from the note sounding (the 808 engine's GLIDE, legato), a hit strikes it afresh */
+static struct { uint8_t root, have, cur; } dm8;
+static int dm8_active(void)
+{
+    return dmp.on && DM_RHY[dmp.r % DM_N].b808 && cfp_cfg.bass_on && !cfp_cp && !cfp_bo;
+}
+static void dm8_target(const uint8_t *nb, int mb)
+{
+    if (mb > 0) {
+        dm8.root = nb[0];
+        dm8.have = 1;
+    }
+}
+static void dm8_off(void)
+{
+    if (!dm8.cur)
+        return;
+    trk_note_off(&trk[1], dm8.cur);
+    cfp_midi(0x80u, cfp_ch(1), dm8.cur, 0);
+    dm8.cur = 0;
+}
+static void dm8_step(uint32_t h)
+{
+    const dm_rhythm_t *y = &DM_RHY[dmp.r % DM_N];
+    uint32_t sd = dm_steps(y->beats), k = dmp.bar * sd + h, i;
+    char c = '.', nc = 'm';
+    int note;
+    if (!dm8_active() || dmp.bar >= y->bars)
+        return;
+    for (i = 0; i <= k && y->b808[i]; i++)
+        c = y->b808[i];
+    if (i <= k || (c != 'x' && c != 's'))
+        return;
+    if (y->b808n) {
+        for (i = 0; i <= k && y->b808n[i]; i++)
+            nc = y->b808n[i];
+        if (i <= k || nc < 'a' || nc > 'y')
+            nc = 'm';
+    }
+    note = (dm8.have ? (int)dm8.root : 36 + (int)cfc.cfg.tonic) + (nc - 'm');
+    while (note < 24)
+        note += 12;
+    while (note > 72)
+        note -= 12;
+    if (c == 's' && dm8.cur) {                   /* (a slide: the new note under the old one's gate, legato) */
+        uint8_t old = dm8.cur;
+        trk[1].slide_glide = 1;
+        trk_note_on(&trk[1], (uint32_t)note, 110);
+        cfp_midi(0x90u, cfp_ch(1), (uint32_t)note, 110);
+        if (old != note) {
+            trk_note_off(&trk[1], old);
+            cfp_midi(0x80u, cfp_ch(1), old, 0);
+        }
+        trk[1].slide_glide = 0;
+    } else {
+        dm8_off();
+        trk[1].slide_glide = 0;
+        trk_note_on(&trk[1], (uint32_t)note, 110);
+        cfp_midi(0x90u, cfp_ch(1), (uint32_t)note, 110);
+    }
+    dm8.cur = (uint8_t)note;
+}
+/* every block: the line stopped (the rhythm stopped, another without one, the bass switched off): its note goes and
+ * the keys' bass comes back */
+static void dm8_poll(void)
+{
+    if (dm8.cur && !dm8_active()) {
+        dm8_off();
+        cfp_sync(1);
+    }
+}
+
 static void dmp_fire(uint32_t h)
 {
     const dm_rhythm_t *y = &DM_RHY[dmp.r % DM_N];
     uint32_t l;
     for (l = 0; l < SQ_NLANE; l++)
         if ((dm_mask(dmp.r, l, dmp.bar) >> h) & 1u) {
+            char c = dm_char(dmp.r, l, dmp.bar, h);
+            uint32_t n = dm_roll(c);
             sqp_lane_kit(l, dmp.kit, y->lev[l]);
-            trk_note_on(&trk[CF_PART_DRUM], SQ_LANE_NOTE[l], 100);
-            cfp_midi(0x90u, cfp_ch(CF_PART_DRUM), SQ_LANE_NOTE[l], 100);
-            sqp.doff |= (uint16_t)(1u << l);
-            sqp.lane_t[l] = cf_now_ms;
+            dm_strike(l, dm_vel(c));
+            dmroll[l].n = (uint8_t)n;               /* (a roll: its other hits come in dmr_now) */
+            dmroll[l].k = 1;
+            dmroll[l].t0 = (uint16_t)dmp_tick_of(h);
+            dmroll[l].len = (uint16_t)(sqp_bar_ticks() / sq_dsteps());
+        }
+    dm8_step(h);
+}
+static void dmr_now(void)
+{
+    uint32_t l;
+    for (l = 0; l < SQ_NLANE; l++)
+        while (dmroll[l].k < dmroll[l].n && dmp.t >= dmroll[l].t0 + (uint32_t)dmroll[l].k * dmroll[l].len / dmroll[l].n) {
+            dm_strike(l, 72u + 24u * (uint32_t)dmroll[l].k / dmroll[l].n);   /* (a roll swells into its last hit) */
+            dmroll[l].k++;
         }
 }
 static void dmp_now(void)
 {
     while (dmp.nh < sq_dsteps() && dmp.t >= dmp_tick_of(dmp.nh))
         dmp_fire(dmp.nh++);
+    dmr_now();
 }
 static void dmp_stop(void)
 {
@@ -244,6 +415,13 @@ static void dmp_start(uint32_t r, uint32_t kit, uint32_t swing)
     dmp.acc = 0;
     dmp.nh = 0;
     dmp.on = 1;
+    {
+        uint32_t l;
+        for (l = 0; l < SQ_NLANE; l++)
+            dmroll[l].n = 0;
+    }
+    if (dm8_active())                            /* (TrapRoot: the 808 line takes the bass from the keys) */
+        cfp_sync(1);
     cfm_restart();
     cfm.running = 1;
     dmp_now();
@@ -264,8 +442,11 @@ static void dmp_rec_in(uint32_t pat, uint32_t trk)
 static void dmp_next_bar(void)
 {
     const dm_rhythm_t *y;
+    uint32_t l;
     dmp.t = 0;
     dmp.nh = 0;
+    for (l = 0; l < SQ_NLANE; l++)               /* (a roll ends with its bar) */
+        dmroll[l].n = 0;
     if (dmp.rin && !--dmp.rbars) {               /* (REC in: the pattern takes over at this bar line) */
         uint32_t pat = dmp.rin - 1u, trk = dmp.rtrk;
         dmp_stop();
@@ -280,6 +461,8 @@ static void dmp_next_bar(void)
         dmp.next = 0xFF;
         dmp.bar = 0;
         dmp.nbar = 0;
+        if (dm8_active() && cfp.nb)              /* (TrapRoot: one with an 808 line takes the bass from the keys) */
+            cfp_sync(1);
         if (DM_RHY[dmp.r % DM_N].beats != cfm.beats) {   /* (a rhythm of another TIME SIG: it comes with it, here at
                                                   * the bar line; the UI takes it into cs.beats, cf_dmui.c dm_poll) */
             cfm.beats = DM_RHY[dmp.r % DM_N].beats;
@@ -302,6 +485,7 @@ static void dmp_tick1(void)
 static void dmp_tick(uint32_t n, uint32_t pulses)   /* every audio block, as sqp_tick */
 {
     uint32_t k;
+    dm8_poll();
     if (!dmp.on)
         return;
     if (cfx_in.active) {

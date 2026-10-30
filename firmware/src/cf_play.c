@@ -361,6 +361,11 @@ static void cfp_change(uint32_t part, uint8_t *old, uint8_t *pn, const uint8_t *
 
 #include "cf_arp.c"                                  /* (the arpeggiator: cfa_chord, cfa_tick, cfa_config) */
 
+/* TrapRoot: a rhythm with an 808 line plays the bass part (cf_drum.c dm8_*): while it plays, the chords only set the
+ * note its hits strike (the bass the keys would play), the keys strike no bass themselves */
+static int dm8_active(void);
+static void dm8_target(const uint8_t *nb, int mb);
+
 /* the bass notes of a chord (the keys' model's, or a sequencer step's); _calc: whatever HOME's bass switch says */
 static int cfp_bass_calc(const cf_chord_out_t *o, uint8_t out[2])
 {
@@ -376,7 +381,8 @@ static int cfp_bass_calc(const cf_chord_out_t *o, uint8_t out[2])
     while (b > 96)
         b -= 12;
     out[n++] = (uint8_t)b;
-    if (cfp_cfg.octaver && b + 12 <= 120)       /* the octaver: the same note an octave up */
+    if (cfp_cfg.octaver && b + 12 <= 120 && trk[1].p[P_VOICE] == V_POLY)   /* the octaver: the same note an octave up
+                                                 * (not under a one-voice bass: TrapRoot's 808) */
         out[n++] = (uint8_t)(b + 12);
     return n;
 }
@@ -496,7 +502,11 @@ static void cfp_sync(int how)
                 cfp.slast = o->note[i];
         }
     }
-    if (!(cfa.latched && !mb))                       /* (LATCH: the bass held under the arpeggio too) */
+    if (dm8_active()) {                              /* (TrapRoot: the 808 line strikes the bass; the keys set it) */
+        dm8_target(nb, mb);
+        if (cfp.nb)
+            cfp_change(1, cfp.bass, &cfp.nb, nb, 0, 1);
+    } else if (!(cfa.latched && !mb))                /* (LATCH: the bass held under the arpeggio too) */
         cfp_change(1, cfp.bass, &cfp.nb, nb, mb, bmode);
     cfp.serial = o->serial;
 }

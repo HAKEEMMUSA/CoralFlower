@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * CoralFlower: the screens' pictures and the popups, then the frame (cf_ui_draw). Included after cf_ui.c. */
 
-#define fcos_ui(a) fl_fcos(a)                       /* (flora.c's integer sine) */
-#define fsin_ui(a) fl_fsin(a)
+#define fcos_ui(a) an_cos(a)                        /* (angel.c's integer sine, as flora.c's was) */
+#define fsin_ui(a) an_sin(a)
 static char cu_name[16], cu_name_sub[12];        /* the chord shown (it stays after the hands let go) */
 static uint8_t cu_name_single;                   /* .. it is single notes (no chord button) */
 static uint8_t cu_name_live;

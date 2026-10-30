@@ -161,5 +161,31 @@ static const ds_kit_t DS_KITS[] = {
         DS(DSW_SINE, DSN_RING, DSF_BP, 0, 0, 0, 1270, 0, 0, 0, 0, 0, 0, 100, 10, 115, 120, 38, 12, 40, 30, 96),
      },
      48, 55, 2, 12, 15, 88},
+    {"X Rage",                                  /* TrapRoot: trap and rage: a short punchy kick over the 808, a high cracking
+                                                 * snare, a wide clap, tight bright hats for the rolls (X Club's voices,
+                                                 * retuned; by numbers, not yet by the owner's ear) */
+     {
+        DS(DSW_ADD, DSN_WHITE, DSF_LP, 0, 0, 576, 0, 12288, 96, 56, 72, 50, 127, 95, 10, 30, 30, 0, 0, 96, 90, 101),
+        DS(DSW_ADD, DSN_WHITE, DSF_BP, 0, 0, 912, 0, 7496, 12, 50, 60, 90, 110, 112, 0, 72, 122, 0, 0, 70, 36, 104),
+        DS(DSW_SINE, DSN_WHITE, DSF_BP, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 88, 40, 88, 122, 0, 36, 0, 24, 110),
+        DS(DSW_SINE, DSN_FM, DSF_HP, 0, 0, 0, 1383, 0, 0, 0, 0, 0, 0, 112, 20, 44, 112, 70, 20, 60, 0, 96),
+        DS(DSW_SINE, DSN_FM, DSF_HP, 0, 0, 0, 1383, 0, 0, 0, 0, 0, 0, 108, 20, 84, 105, 70, 25, 40, 0, 82),
+        DS(DSW_SINE, DSN_WHITE, DSF_LP, 0, 0, 720, 0, 0, 28, 70, 90, 0, 127, 85, 10, 40, 25, 0, 0, 25, 15, 93),
+        DS(DSW_ADD, DSN_WHITE, DSF_BP, 0, 0, 1139, 0, 13312, 4, 30, 38, 120, 120, 106, 30, 30, 50, 0, 0, 40, 90, 104),
+        DS(DSW_SQ2, DSN_NONE, DSF_BP, 0, 1, 1157, 0, 6062, 0, 0, 80, 127, 110, 70, 60, 0, 0, 0, 0, 0, 0, 105),
+        DS(DSW_SINE, DSN_FM, DSF_HP, 0, 0, 0, 1187, 0, 0, 0, 0, 0, 0, 80, 0, 108, 110, 80, 35, 40, 0, 81),
+     },
+     {
+        DS(DSW_ADD, DSN_WHITE, DSF_LP, 0, 0, 576, 0, 12288, 96, 56, 72, 60, 127, 100, 10, 33, 40, 0, 0, 111, 105, 105),
+        DS(DSW_ADD, DSN_WHITE, DSF_BP, 0, 0, 912, 0, 7496, 16, 50, 60, 100, 118, 112, 0, 72, 122, 0, 0, 85, 51, 108),
+        DS(DSW_SINE, DSN_WHITE, DSF_BP, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 88, 40, 88, 122, 0, 36, 0, 39, 114),
+        DS(DSW_SINE, DSN_FM, DSF_HP, 0, 0, 0, 1383, 0, 0, 0, 0, 0, 0, 112, 20, 44, 112, 78, 20, 75, 0, 100),
+        DS(DSW_SINE, DSN_FM, DSF_HP, 0, 0, 0, 1383, 0, 0, 0, 0, 0, 0, 108, 20, 84, 117, 78, 25, 55, 0, 86),
+        DS(DSW_SINE, DSN_WHITE, DSF_LP, 0, 0, 720, 0, 0, 34, 70, 92, 0, 127, 88, 10, 40, 35, 0, 0, 35, 15, 97),
+        DS(DSW_ADD, DSN_WHITE, DSF_BP, 0, 0, 1139, 0, 13312, 4, 30, 40, 120, 120, 108, 30, 30, 60, 0, 0, 55, 105, 108),
+        DS(DSW_SQ2, DSN_NONE, DSF_BP, 0, 1, 1157, 0, 6062, 0, 0, 82, 127, 120, 72, 60, 0, 0, 0, 0, 0, 0, 109),
+        DS(DSW_SINE, DSN_FM, DSF_HP, 0, 0, 0, 1187, 0, 0, 0, 0, 0, 0, 82, 0, 108, 120, 88, 35, 50, 0, 85),
+     },
+     32, 30, 1, 0, 0, 0},
 };
 #define DS_NKIT ((uint32_t)(sizeof DS_KITS / sizeof DS_KITS[0]))
