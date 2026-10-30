@@ -28,11 +28,42 @@
  * State: per part and voice (e8_vs, POOL). Cost: a voice per sample is one interpolated sine, the shaper (one table
  * read at most), two one-poles and the click when it rings: a light engine (cpu/808 in tests/cpu_baseline.txt). */
 
-enum { E8_CLEAN, E8_WARM, E8_HARD, E8_GROWL, E8_FOLD, E8_RAGE, E8_NMODEL };
-static const char *const N_E8_MODEL[E8_NMODEL] = {"CLEAN", "WARM", "HARD", "GROWL", "FOLD", "RAGE"};
+enum { E8_CLEAN, E8_WARM, E8_HARD, E8_GROWL, E8_FOLD, E8_RAGE, E8_HEAVY, E8_NMODEL };   /* (append only: stored) */
+static const char *const N_E8_MODEL[E8_NMODEL] = {"CLEAN", "WARM", "HARD", "GROWL", "FOLD", "RAGE", "HEAVY"};
 /* output trim per model (Q12): the models level with WARM at DRIVE 70 by RMS (measured by TrapRoot's ChoralRoot-based tests);
  * CLEAN's falls with DRIVE (a sine at 0, nearly a square at the knee) */
-static const uint16_t E8_COMP[E8_NMODEL] = {4096, 3700, 4140, 3800, 5570, 4240};
+static const uint16_t E8_COMP[E8_NMODEL] = {4096, 3700, 4140, 3800, 5570, 4240, 4096};
+
+/* HEAVY: a shaping curve made from the owner's reference 808 (a heavy, saturated C1 808, TrapRoot 2026-10-30): its
+ * steady tone's first 16 harmonics measured (levels, and their signs against the fundamental's phase), then summed as
+ * Chebyshev polynomials, sum a_n T_n(x), so a full-scale sine through the curve gives exactly those levels: the third
+ * harmonic 10 dB over the fundamental, the second and fourth near it, the rest falling to -35 dB by the 16th. DRIVE
+ * sets how hard the sine hits it (0: 30 % of the curve, a rounder, cleaner sub; 127: all of it, the reference's tone).
+ * 257 points, x -1 .. +1, Q15 (DC removed for the full sine; the DC blocker takes the rest) */
+static const int16_t E8_HEAVY_TAB[257] = {
+    7024, 6357, 5416, 4299, 3083, 1825, 568, -656, -1826, -2928, -3954, -4900,
+    -5766, -6554, -7266, -7909, -8488, -9008, -9475, -9895, -10273, -10613, -10922, -11202,
+    -11458, -11693, -11909, -12109, -12296, -12472, -12638, -12796, -12947, -13092, -13234, -13371,
+    -13506, -13640, -13773, -13905, -14038, -14172, -14308, -14445, -14585, -14727, -14872, -15020,
+    -15170, -15323, -15478, -15636, -15795, -15956, -16117, -16279, -16440, -16599, -16756, -16909,
+    -17058, -17202, -17340, -17470, -17591, -17704, -17805, -17896, -17973, -18038, -18088, -18124,
+    -18143, -18147, -18133, -18102, -18054, -17987, -17902, -17799, -17678, -17538, -17380, -17204,
+    -17010, -16799, -16571, -16326, -16065, -15789, -15497, -15191, -14872, -14538, -14192, -13834,
+    -13464, -13084, -12692, -12291, -11880, -11460, -11031, -10594, -10148, -9695, -9235, -8768,
+    -8293, -7812, -7324, -6830, -6329, -5822, -5309, -4791, -4266, -3737, -3202, -2661,
+    -2117, -1567, -1014, -456, 104, 667, 1233, 1800, 2368, 2936, 3503, 4069,
+    4633, 5193, 5749, 6300, 6845, 7382, 7911, 8430, 8939, 9436, 9921, 10392,
+    10849, 11290, 11715, 12124, 12514, 12887, 13241, 13576, 13893, 14190, 14468, 14728,
+    14969, 15192, 15398, 15588, 15762, 15921, 16067, 16202, 16326, 16441, 16548, 16650,
+    16749, 16845, 16941, 17040, 17141, 17248, 17363, 17487, 17621, 17767, 17928, 18103,
+    18294, 18502, 18728, 18972, 19235, 19516, 19816, 20134, 20469, 20820, 21186, 21566,
+    21958, 22360, 22769, 23183, 23601, 24018, 24432, 24839, 25238, 25623, 25993, 26344,
+    26672, 26975, 27249, 27491, 27698, 27868, 27999, 28087, 28132, 28132, 28084, 27989,
+    27845, 27652, 27410, 27118, 26778, 26389, 25953, 25470, 24941, 24367, 23749, 23087,
+    22382, 21635, 20844, 20010, 19130, 18203, 17227, 16197, 15109, 13958, 12738, 11442,
+    10061, 8586, 7008, 5317, 3501, 1549, -549, -2805, -5227, -7824, -10603, -13567,
+    -16717, -20048, -23551, -27209, -31000,
+};
 
 typedef struct {
     int32_t env;                 /* the tail, Q24 (1 << 24 = full) */
@@ -43,8 +74,10 @@ typedef struct {
     int32_t cle;                 /* the click's envelope, Q15 */
     uint32_t cph, inc;           /* the click's phase; the last block's increment (the ramp's start) */
     uint8_t atk;                 /* blocks of a retriggered tail's ramp still to go (no click then) */
+    uint16_t age;                /* blocks since the hit (HEAVY's hold) */
 } e8_vs_t;
 static e8_vs_t e8_vs[ENG_STATE_NPART][NPOLY] __attribute__((section(".pool")));
+#define E8_HOLD ((uint16_t)(FS * 18u / 10u / CTL))   /* 1.8 s in control blocks */
 static e8_vs_t *e8_of(const track_t *t, const voice_t *v)
 {
     uint32_t part = (uint32_t)(t - trk);
@@ -93,6 +126,11 @@ static inline int32_t e8_shape(uint32_t model, int32_t x, int32_t *dc)
         break;
     case E8_FOLD:                                    /* sin(x): x Q15 of a quarter turn (32768 = pi / 2) */
         return sine_i((uint32_t)x << 15) - (sine_i((uint32_t)x << 15) >> 3);
+    case E8_HEAVY: {                                 /* the curve, interpolated */
+        int32_t u = clamp(x, -32767, 32767) + 32768, i = u >> 8, f = u & 255;
+        y = E8_HEAVY_TAB[i] + (((E8_HEAVY_TAB[i + 1] - E8_HEAVY_TAB[i]) * f) >> 8);
+        break;
+    }
     case E8_RAGE: {
         int32_t s = softclip(x), a = s < 0 ? -s : s;
         y = clamp(s + (s >> 1), -27000, 27000) + ((a - 18000) >> 2);   /* tanh, clipped, a quarter of |x| over it */
@@ -118,6 +156,7 @@ static void e8_hit(track_t *t, voice_t *v, e8_vs_t *S, uint32_t was, int slide)
         return;
     }
     S->glo = 0;
+    S->age = 0;
     S->pen = p[P_E2] > 0 ? 1 << 24 : 0;
     S->atk = was && S->env > (1 << 20) ? 2u : 0u;    /* struck while it rings: a 2-block ramp up, no click */
     if (!S->atk) {
@@ -155,6 +194,12 @@ static int32_t e8_amp(track_t *t, voice_t *v, int32_t adsr)
         S->atk--;
     } else if (p[P_E4] < 127) {                      /* DECAY: ~77 ms .. 10 s to -40 dB; 127: held */
         S->env -= mulq16(S->env, ENV_EXP[60 + (uint32_t)p[P_E4] * 66u / 126u]);
+    } else if (p[P_E0] == E8_HEAVY) {                /* HEAVY at 127: held 1.8 s, then -14 dB a second (the reference
+                                                  * one-shot's tail, measured), the key down or not */
+        if (S->age < E8_HOLD)
+            S->age++;
+        else
+            S->env -= mulq16(S->env, 77);            /* (1 - 10^(-0.7 / 1378)) in Q16: -14 dB over 1378 blocks */
     }
     return mulq15(S->env >> 9, adsr);
 }
@@ -164,7 +209,7 @@ static void e8_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     const int16_t *p = t->p;
     e8_vs_t *S = e8_of(t, v);
     uint32_t model = (uint32_t)clamp(p[P_E0], 0, E8_NMODEL - 1), i, ph = v->ph[0], inc0, inc1, cinc;
-    int32_t g, comp, a1, a2, cle, kc, punch, dinc, lp1, lp2, dc;
+    int32_t g, comp, a1, a2, cle, kc, punch, dinc, lp1, lp2, dc, hg;
     if (!S)
         return;
     if (n > CTL)
@@ -185,6 +230,9 @@ static void e8_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     /* DRIVE: x1 .. x20 (exponential), the model's trim */
     g = (int32_t)e8_exp2((int32_t)p[P_E1] * 4096 * 43 / (127 * 10));   /* Q16: 2^(4.3 d) */
     comp = model == E8_CLEAN ? 4096 - p[P_E1] * 12 : E8_COMP[model];
+    hg = 19661 + p[P_E1] * 45875 / 127;              /* HEAVY: 30 % .. 100 % of its curve (Q16) */
+    hg -= (int32_t)(((int64_t)(hg * 3 / 5) * (S->pen >> 9)) >> 15);   /* (.. less of it while the punch falls: the
+                                                  * reference swells from a round sweep into its full tone, ~70 ms) */
     /* TONE: two one-poles at ~120 Hz .. 12 kHz */
     a1 = e8_pole(749 + p[P_E5] * 1300 / 127);
     a2 = a1;
@@ -198,7 +246,9 @@ static void e8_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
         int32_t x, y;
         ph += inc0 + (uint32_t)(dinc * (int32_t)i);
         x = sine_i(ph);
-        if (model != E8_CLEAN || p[P_E1])
+        if (model == E8_HEAVY)                       /* (HEAVY: DRIVE is how much of the curve, not a gain) */
+            x = (int32_t)(((int64_t)x * hg) >> 16);
+        else if (model != E8_CLEAN || p[P_E1])
             x = (int32_t)(((int64_t)x * g) >> 16);
         y = e8_shape(model, model == E8_CLEAN ? soft_knee(x, 24000) : x, &dc);
         if (cle > 40) {                              /* CLICK: a damped 1.5 kHz burst on the hit */
@@ -220,6 +270,10 @@ static void e8_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
 
 /* the factory 808s: {MODEL DRIVE PUNCH SNAP DECAY TONE CLICK GLIDE}, {A D S R} (the gate: A 0, S full), mono */
 static const preset_t E8_PRESETS[] = {
+    /* HEAVY: the owner's reference, matched by measurement (its tone through E8_HEAVY_TAB, within 0.5 dB on the first
+     * eight harmonics at C1; the punch sweeping two octaves down in ~70 ms with the curve swelling in; the tail held, then
+     * held 1.8 s, then falling about 14 dB a second, as the one-shot's tail: e8_amp) */
+    {"HEAVY", {E8_HEAVY, 127, 127, 105, 127, 110, 90, 60}, {0, 64, 127, 60}, 0, 1, FX(0, 0, 0, 0), PAT(0)},
     {"CARSON", {E8_RAGE, 70, 60, 40, 100, 100, 30, 60}, {0, 64, 127, 48}, 0, 1, FX(0, 0, 0, 0), PAT(0)},
     {"SLIDE", {E8_WARM, 50, 45, 36, 108, 90, 20, 72}, {0, 64, 127, 50}, 0, 1, FX(0, 0, 0, 0), PAT(0)},
     {"CLEAN", {E8_CLEAN, 0, 40, 34, 104, 70, 12, 56}, {0, 64, 127, 50}, 0, 1, FX(0, 0, 0, 0), PAT(0)},

@@ -55,6 +55,16 @@ and hits once every two bars. The snare plays on steps 1, 7 and 13 of bar 1 and 
 the clap on beat 3 of each bar, one open hat at step 13, and one shaker at bar 2's step 3. The shaker is on the hat
 lane, since the kits have no shaker.
 
+### HEAVY, the default 808
+
+HEAVY is matched by measurement to a reference 808 you chose (a heavy, saturated C1 808). A seventh MODEL, **HEAVY**,
+is a shaping curve built from the reference's first 16 harmonics. At full DRIVE a sine through it gives the reference's
+tone within half a dB on the first eight harmonics: the third harmonic 10 dB over the fundamental, the second and
+fourth near it. Lower DRIVE uses less of the curve, for a rounder sub. During the punch the curve swells in as the
+pitch falls two octaves, as the reference does in its first 70 ms. With DECAY at 127 the note holds for 1.8 s, then
+falls about 14 dB a second like the reference one-shot, whether or not the key is still down. In a rhythm's 808 line
+the root sits in the 808's own octave, C1 to B1 (33 to 62 Hz), whatever octave the keys are in.
+
 ### The 808 line
 
 A rhythm with an 808 line plays the bass part while it runs. Each hit strikes the note the keys' bass would play (the
@@ -80,7 +90,8 @@ With an 808 on the bass part, the part is one voice (legato, so it slides). The 
 | GLIDE | The slide time. |
 
 The sound editor (EDIT on HOME, the bass part) shows them on two pages, **808** and **Shape**. The presets:
-CARSON (the rage default), SLIDE, CLEAN, HARD, BLOWN, GROWL, TALK, SHORT, ROUND SUB and DIRTY.
+HEAVY (the default),
+CARSON, SLIDE, CLEAN, HARD, BLOWN, GROWL, TALK, SHORT, ROUND SUB and DIRTY.
 
 ## The DRUMS editor
 

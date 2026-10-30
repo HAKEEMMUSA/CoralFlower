@@ -327,10 +327,16 @@ static void dm8_step(uint32_t h)
         if (i <= k || nc < 'a' || nc > 'y')
             nc = 'm';
     }
-    note = (dm8.have ? (int)dm8.root : 36 + (int)cfc.cfg.tonic) + (nc - 'm');
+    note = dm8.have ? (int)dm8.root : 24 + (int)cfc.cfg.tonic;
+    while (note > 35)                            /* (the root in the 808's own octave, C1 .. B1: deep, whatever the keys'
+                                                  * octave; the line's intervals over it) */
+        note -= 12;
     while (note < 24)
         note += 12;
-    while (note > 72)
+    note += nc - 'm';
+    while (note < 24)
+        note += 12;
+    while (note > 59)
         note -= 12;
     if (c == 's' && dm8.cur) {                   /* (a slide: the new note under the old one's gate, legato) */
         uint8_t old = dm8.cur;

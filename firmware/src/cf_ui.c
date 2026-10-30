@@ -1818,7 +1818,7 @@ static void cf_ui_init(void)
         if (!cf_snd_find(CF_PART_CHORD, ENGI_FM6, "ORGAN"))
             cf_snd_load_index(CF_PART_CHORD, 1);
 #if FELUCCA_808
-        if (!cf_snd_find(CF_PART_BASS, ENGI_808, "CARSON"))
+        if (!cf_snd_find(CF_PART_BASS, ENGI_808, "HEAVY") && !cf_snd_find(CF_PART_BASS, ENGI_808, "CARSON"))
 #endif
 #if FELUCCA_VA
         if (!cf_snd_find(CF_PART_BASS, ENGI_VA, "DEEP SUB"))
