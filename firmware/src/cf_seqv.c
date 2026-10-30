@@ -329,7 +329,10 @@ static void sq_ev_name(const sq_pat_t *p, uint32_t i, char *b)
  * playing lit; under it the drum and the bar, the bars as tabs. The keys and knobs are CoralFlower's, as before */
 static void sq_drums13(const sq_pat_t *p)
 {
-    int st = (int)sq_dsteps(), nb = (int)sq_tbars(p, SQ_DRUMS), l0, r, i, gx = 26, cw, gy = Y_VIEW + 52, rh = 13;
+    /* (the owner, 2026-10-30: both bars shown, smaller: the two bars of the pair the frame's bar is in, one over the
+     * other, four drums each; the frame's bar's picked drum framed) */
+    int st = (int)sq_dsteps(), nb = (int)sq_tbars(p, SQ_DRUMS), l0, r, i, k, gx = 26, cw, gy = Y_VIEW + 40, rh = 9;
+    int b0 = (int)squ.bar & ~1, bh = 4 * rh + 6, yb;
     uint32_t lane = squ.lane % SQ_NLANE;
     char b[32];
     if (nb < 1)
@@ -339,50 +342,59 @@ static void sq_drums13(const sq_pat_t *p)
     {
         const char *nm = sq_lane_name(lane);
         int w = fb_text_w(&CF_FONT_UI, nm, 2);
-        fb_text(&CF_FONT_UI, 120 - w / 2, Y_VIEW + 15, nm, FL_C(sq_lane_ink(lane).ramp, 0), 2);
+        fb_text(&CF_FONT_UI, 120 - w / 2, Y_VIEW + 12, nm, FL_C(sq_lane_ink(lane).ramp, 0), 2);
         if (lane > 0u)
-            fb_text(&CF_FONT_UI, 4, Y_VIEW + 21, sq_lane_name(lane - 1u), FL_INK3, 1);
+            fb_text(&CF_FONT_UI, 4, Y_VIEW + 18, sq_lane_name(lane - 1u), FL_INK3, 1);
         if (lane + 1u < SQ_NLANE)
-            fb_text_r(&CF_FONT_UI, 236, Y_VIEW + 21, sq_lane_name(lane + 1u), FL_INK3, 1);
+            fb_text_r(&CF_FONT_UI, 236, Y_VIEW + 18, sq_lane_name(lane + 1u), FL_INK3, 1);
         for (i = 0; i < (int)SQ_NLANE; i++)      /* (a dot a drum, the picked one lit) */
-            fb_rect(120 - (int)SQ_NLANE * 3 + i * 6, Y_VIEW + 43, 4, 2,
+            fb_rect(120 - (int)SQ_NLANE * 3 + i * 6, Y_VIEW + 33, 4, 2,
                     (uint32_t)i == lane ? FL_C(sq_lane_ink(lane).ramp, 0) : FL_BG3);
     }
-    /* the grid: four drums, the picked one among them */
+    /* the grid: four drums, the picked one among them, a block a bar */
     l0 = (int)lane - 1;
     if (l0 > (int)SQ_NLANE - 4)
         l0 = (int)SQ_NLANE - 4;
     if (l0 < 0)
         l0 = 0;
-    for (r = 0; r < 4; r++) {
-        uint32_t l = (uint32_t)(l0 + r), hits = p->hit[l][squ.bar % SQ_BARS];
-        int y = gy + r * rh, cur = l == lane;
-        uint8_t ink = FL_C(sq_lane_ink(l).ramp, cur ? 0 : 2);
-        draw_drum_icon(gx - 13, y + 5, sq_lane_pic(l, p->dkit[l]), cur ? FL_INK : FL_INK3);
-        for (i = 0; i < st; i++) {
-            int x = gx + i * cw;
-            uint8_t c = (hits >> i) & 1u ? ink : cur ? (i % 4 == 0 ? FL_BG3 : FL_BG2) : (i % 4 == 0 ? FL_BG2 : FL_BG1);
-            fb_rect(x, y, cw - 1, rh - 2, c);
+    for (k = 0; k < 2 && b0 + k < nb && b0 + k < (int)SQ_BARS; k++) {
+        int bar = b0 + k, here = bar == (int)squ.bar;
+        char t[3];
+        yb = gy + k * bh;
+        t[0] = (char)('1' + bar);                /* (the bar's number at its block's left) */
+        t[1] = 0;
+        fb_text(&CF_FONT_UI, 2, yb + 2 * rh - 7, t, here ? C_ACC(0) : FL_INK3, 1);
+        for (r = 0; r < 4; r++) {
+            uint32_t l = (uint32_t)(l0 + r), hits = p->hit[l][bar];
+            int y = yb + r * rh, cur = l == lane;
+            uint8_t ink = FL_C(sq_lane_ink(l).ramp, cur ? 0 : 2);
+            draw_drum_icon(gx - 11, y + 4, sq_lane_pic(l, p->dkit[l]), cur ? FL_INK : FL_INK3);
+            for (i = 0; i < st; i++) {
+                int x = gx + i * cw;
+                uint8_t c = (hits >> i) & 1u ? ink : cur ? (i % 4 == 0 ? FL_BG3 : FL_BG2) : (i % 4 == 0 ? FL_BG2 : FL_BG1);
+                fb_rect(x, y, cw - 1, rh - 1, c);
+            }
+            if (cur && here)                     /* (the picked drum's row in the frame's bar framed) */
+                fb_rframe(gx - 2, y - 2, st * cw + 3, rh + 3, C_ACC(0));
         }
-        if (cur)                                 /* (the picked drum's row framed) */
-            fb_rframe(gx - 2, y - 2, st * cw + 3, rh + 2, C_ACC(0));
-    }
-    if (sq_playing_here() && (int)sq_trk_bar(p, SQ_DRUMS, cf_sn.sq_n) == (int)squ.bar) {   /* (the step playing) */
-        int k = (int)(cf_sn.sq_t * (uint32_t)st / cf_sn.sq_bt);
-        fb_rect(gx + k * cw, gy - 4, cw - 1, 2, FL_C(FL_R_FIRE, 1));
+        if (sq_playing_here() && (int)sq_trk_bar(p, SQ_DRUMS, cf_sn.sq_n) == bar) {   /* (the step playing) */
+            int s = (int)(cf_sn.sq_t * (uint32_t)st / cf_sn.sq_bt);
+            fb_rect(gx + s * cw, yb - 4, cw - 1, 2, FL_C(FL_R_FIRE, 1));
+        }
     }
     /* under it: the drum and the bar, the bars as tabs */
+    yb = gy + 2 * bh + 1;
     str_cpy(b, sq_lane_name(lane), sizeof b);
     str_cpy(b + str_len(b), ", bar ", sizeof b - str_len(b));
     kint(b + str_len(b), (int)squ.bar + 1, 0);
-    fb_text(&CF_FONT_UI, 8, gy + 4 * rh + 4, b, FL_INK, 1);
+    fb_text(&CF_FONT_UI, 8, yb, b, FL_INK, 1);
     for (i = 0; i < nb && i < (int)SQ_BARS; i++) {
         char t[3];
         int x = 236 - (nb - i) * 14, on = i == (int)squ.bar;
         t[0] = (char)('1' + i);
         t[1] = 0;
-        fb_rbox(x, gy + 4 * rh + 3, 12, 12, 2, on ? C_ACC(0) : cf_panel(1));
-        fb_text_c(&CF_FONT_UI, x + 6, gy + 4 * rh + 3, t, on ? FL_INK : FL_INK3, 1);
+        fb_rbox(x, yb - 1, 12, 12, 2, on ? C_ACC(0) : (i & ~1) == b0 ? cf_panel(2) : cf_panel(1));
+        fb_text_c(&CF_FONT_UI, x + 6, yb - 1, t, on ? FL_INK : (i & ~1) == b0 ? FL_INK2 : FL_INK3, 1);
     }
 }
 

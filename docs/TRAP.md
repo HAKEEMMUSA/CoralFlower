@@ -131,13 +131,15 @@ CARSON, SLIDE, CLEAN, HARD, BLOWN, GROWL, TALK, SHORT, ROUND SUB and DIRTY.
 
 ## The DRUMS editor
 
-The DRUMS track of a pattern (EDIT in the rhythm machine, or the sequencer's DRUMS) is drawn as a step editor. The drum
-picked sits big in the middle with its neighbours either side, and a dot for each drum shows where it is among the 11.
-Below that is a grid of four drums by the bar's steps: the picked drum bright and framed, the others dim, each in its
-own colour, the beats' columns a shade lighter, and a mark over the step playing. Under the grid are the drum and the
-bar, then the bars as tabs. The controls are CoralFlower's: the upper keys pick a drum, the lower keys toggle its steps,
-SELECT moves through the bars, and K1-K4 set the drum's kit, its level, the bars and the position. The bar-copy and erase
-gestures switch back to the bars' view while they run.
+The DRUMS track of a pattern (EDIT on Rage in the rhythm machine, or the sequencer's DRUMS) is drawn as a step editor.
+The drum picked sits big at the top with its neighbours either side, and a dot for each drum shows where it is among
+the 11. Below that are two bars at once, one over the other: the pair the frame's bar is in (bars 1 and 2, then 3 and
+4, ...), each four drums by the bar's steps, its number at its left. The picked drum is bright, the others dim, each in
+its own colour, the beats' columns a shade lighter; the picked drum's row in the frame's bar is framed, and a mark over
+a bar shows the step playing. Under them are the drum and the bar, then the bars as tabs. The controls are
+CoralFlower's: the upper keys pick a drum, the lower keys toggle its steps in the frame's bar, SELECT moves through the
+bars, and K1-K4 set the drum's kit, its level, the bars and the position. The bar-copy and erase gestures switch back
+to the bars' view while they run.
 
 ## The fallen angel
 
