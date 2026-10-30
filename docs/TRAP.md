@@ -34,7 +34,7 @@ installing CoralFlower again takes it back.
 
 ## Making a beat
 
-1. **PLAY**. On a new unit, PLAY on HOME starts the first rhythm, **Rage**, at 150 BPM. The 808 line takes over the
+1. **PLAY**. On a new unit, PLAY on HOME starts the first rhythm, **Rage**, at 180 BPM. The 808 line takes over the
    bass. (BASS on the LFO button must be on, as it is by default.)
 2. **Tap a chord button** (Top layout: the upper row; **m** for minor). With Lock it stays on.
 3. **Play roots** on the lower row. The 808 hits land on each new root, slides glide into it, and the chords use
@@ -45,8 +45,15 @@ installing CoralFlower again takes it back.
    over it, as in CoralFlower.
 6. **SELECT on HOME** changes the 808 (the bass sound); **PRESETS** changes the chord sound.
 
-The tempo is the user's, as in CoralFlower. Each rhythm shows the tempo its style lives at (Rage ~160, Atlanta ~140,
+The tempo is the user's, as in CoralFlower. Each rhythm shows the tempo its style lives at (Rage ~180, Atlanta ~140,
 Opium ~165, Plugg ~145, Memphis ~135).
+
+### Rage
+
+Rage is an FL Studio pattern you picked, read from its channel rack at 180 BPM. It has no kick: the 808 is the low end
+and hits once every two bars. The snare plays on steps 1, 7 and 13 of bar 1 and 5 and 11 of bar 2 (the rage bounce),
+the clap on beat 3 of each bar, one open hat at step 13, and one shaker at bar 2's step 3. The shaker is on the hat
+lane, since the kits have no shaker.
 
 ### The 808 line
 
@@ -119,7 +126,7 @@ sky, moon, clouds and fire are drawn in code. It is about 3 KB smaller than the 
 - The bass list starts with the 808s; a new unit starts on RAGE SAW chords over the CARSON 808, the LAYER on KEN LEAD.
 - The rhythm machine lists the trap rhythms first. PLAY on HOME plays a rhythm on a new unit, and SEQ twice opens the
   rhythm machine.
-- The tempo starts at 150 BPM. The interface colour starts on **Blood** (CoralFlower's Coral ramp, renamed).
+- The tempo starts at 180 BPM (Rage's). The interface colour starts on **Blood** (CoralFlower's Coral ramp, renamed).
 - The sequencer's marks are trap marks instead of flowers: a chord an ice diamond, a bass note a drop, a drum a flame,
   the layer a star, on wine-red stems.
 - The splash says TrapRoot; the version string is `TrapRoot X.Y`.

@@ -107,7 +107,7 @@ static void cs_defaults(cf_set_t *s)
     s->bass_level = 96;
     s->metro_level = 0;
     s->beats = 4;
-    s->bpm = 150;                                 /* (TrapRoot: trap and rage tempo) */
+    s->bpm = 180;                                 /* (TrapRoot: Rage's tempo, the first rhythm PLAY plays) */
     s->accent = 0;                   /* Blood (TrapRoot; CoralFlower: 3, Lime) */
     s->env_link = 1;
     s->midi_out = 1;

@@ -40,12 +40,14 @@ static const dm_rhythm_t DM_RHY[] = {
     /* 4/4: 16 steps a bar */
     /* TrapRoot: trap, rage and plugg first (ids 48 on). The hats roll ('3' '4' '6' '8'), the 808 line follows the chord
      * (b808 / b808n, above); the kit is X Rage (drum_kits.c), the kick short: the 808 is the low end */
-    {"Rage", 48, 4, 2, DMK_XRAGE, 0, 160,
-     {[DM_K] = "x.....x...x....." "x..x..x.....x...", [DM_S] = "........X......." "........X.......",
-      [DM_C] = "........X......." "........X.......", [DM_H] = "x.x.x.x.x.x.x.3." "x.x.x.x.x.x.x4x6",
-      [DM_O] = "...............x" "...............x", [DM_X] = "X..............." "................"},
-     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 80, [DM_H] = 55, [DM_O] = 50, [DM_X] = 40},
-     "x.....x...x....." "x..x..x.....s...", "mmmmmmmmmmmmmmmm" "kkkkkkkkkkkkttmm"},
+    /* Rage: the owner's pick (an FL Studio pattern at 180 BPM, read from its channel rack): no kick, the 808 is the
+     * low end and hits once every two bars; the snare on 1, 7, 13 and 21, 27 (the rage bounce), the clap on 3 of each
+     * bar, one open hat (step 13), one shaker (bar 2's step 3, on the hat lane: the kits have no shaker) */
+    {"Rage", 48, 4, 2, DMK_XRAGE, 0, 180,
+     {[DM_S] = "x.....x.....x..." "....x.....x.....", [DM_C] = "........x......." "........x.......",
+      [DM_O] = "............x..." "................", [DM_H] = "................" "..x............."},
+     {[DM_S] = 100, [DM_C] = 85, [DM_O] = 55, [DM_H] = 50},
+     "x..............." "................", "mmmmmmmmmmmmmmmm" "mmmmmmmmmmmmmmmm"},
     {"Atlanta", 49, 4, 2, DMK_XRAGE, 0, 140,
      {[DM_K] = "x......x..x....." "x......x.x......", [DM_S] = "........X......." "........X.......",
       [DM_C] = "........X......." "........X.......", [DM_H] = "xxxxxxxxxxxx3.xx" "xxxxxxxxxx4.xxx6",
