@@ -70,27 +70,75 @@ static void dm_draw_help(void)
         draw_chip_text(18, Y_VIEW + 9 + i * 14, L[i], FL_INK);
 }
 
+/* TrapRoot: an 808 pattern alone (no drums), as a piano roll: two bars at a time (the pair playing), a note a bar from
+ * its tick to the next note's (one-shot, as it sounds), higher for a higher note, brighter for a louder one; a slide
+ * joined to the note it glides from; where it plays, a line */
+static void dm8_roll(const dm8_line_t *L, int x0, int x1, int y0, int y1, int play)
+{
+    uint32_t bt = 4u * 96u, w = 2u * bt, i, base = 0;
+    int lo = 127, hi = -128, span, prevx = -1, prevy = 0;
+    if (L->bars > 2u && play)
+        base = ((cf_sn.dm_nbar % L->bars) & ~1u) * bt;
+    for (i = 0; i < L->n; i++) {
+        lo = L->ev[i].iv < lo ? L->ev[i].iv : lo;
+        hi = L->ev[i].iv > hi ? L->ev[i].iv : hi;
+    }
+    span = hi - lo < 12 ? 12 : hi - lo;
+    lo -= (span - (hi - lo)) / 2;                /* (a narrow pattern in the middle) */
+    for (i = 0; i <= 8u; i++)                    /* the beats, the bar line between the two bars brighter */
+        fb_rect(x0 + (int)(i * (uint32_t)(x1 - x0) / 8u), y0, 1, y1 - y0, i == 4u ? FL_C(FL_R_ORCHID, 2) : FL_BG2);
+    fb_text(&CF_FONT_UI, x0 + 2, y0 - 1, "808", FL_INK3, 1);
+    for (i = 0; i < L->n; i++) {
+        const dm8_ev_t *e = &L->ev[i];
+        uint32_t len = e->len;
+        int xa, xb, yy;
+        uint8_t c;
+        if (e->t < base || e->t >= base + w)
+            continue;
+        if (e->t + len > base + w)
+            len = base + w - e->t;
+        xa = x0 + (int)((e->t - base) * (uint32_t)(x1 - x0) / w);
+        xb = x0 + (int)((e->t - base + len) * (uint32_t)(x1 - x0) / w);
+        yy = y1 - 4 - (e->iv - lo) * (y1 - y0 - 8) / span;
+        c = FL_C(FL_R_ROSE, (e->vel & 127u) > 96u ? 0 : (e->vel & 127u) > 56u ? 1 : 2);
+        if ((e->vel & 128u) && prevx >= 0)       /* (a slide: from the note before) */
+            fb_rect(xa, yy < prevy ? yy : prevy, 1, (yy < prevy ? prevy - yy : yy - prevy) + 1, FL_C(FL_R_ROSE, 1));
+        fb_rect(xa, yy - 1, xb - xa > 1 ? xb - xa - 1 : 1, 3, FL_C(FL_R_ROSE, 2));
+        fb_rect(xa, yy - 2, 2, 5, c);            /* (its strike) */
+        prevx = xb;
+        prevy = yy;
+    }
+    if (play && cf_sn.sq_bt) {
+        uint32_t pos = (cf_sn.dm_nbar % L->bars) * bt + cf_sn.dm_t * bt / cf_sn.sq_bt;
+        if (pos >= base && pos < base + w)
+            fb_rect(x0 + (int)((pos - base) * (uint32_t)(x1 - x0) / w), y0 - 2, 1, y1 - y0 + 2, FL_C(FL_R_FIRE, 1));
+    }
+}
+
 /* the drum machine: its drums' rows of hits, each led by its drum's picture
- * (both bars of a 2-bar one, a dashed line between), a cursor running over them while it plays. Its name blinks while
- * it waits for the bar line; a dot after it: the user's KIT or SWING on it (SEL takes them back) */
+ * (both bars of a 2-bar one, a dashed line between), a cursor running over them while it plays; under them its 808
+ * (a drop a note). An 808 pattern alone: its piano roll (dm8_roll). Its name blinks while it waits for the bar line; a
+ * dot after it: the user's KIT or SWING on it (SEL takes them back) */
 static void view_drum(int x0)
 {
     uint32_t r = dm_cur(), sd, nb, steps, l, b, i, nl = 0;
     const dm_rhythm_t *y = &DM_RHY[r % DM_N];
     int gx = x0 + 34, gw = 216 - 34, row, yt = VIEW_Y - 2, k = 0, play = dm_plays(r);
     const dm8_line_t *L = dm8_line_of(r);
-    uint32_t wb, wn, lw = 0;
+    uint32_t wb, wn;
     sd = dm_steps(y->beats);                     /* (its own TIME SIG: one picked from another shows its bars) */
     nb = y->bars ? y->bars : 1u;
-    /* (TrapRoot: two bars at a time, the pair playing; the 808 line's own pair under them) */
-    wn = nb < 2u ? nb : 2u;
-    wb = play ? (cf_sn.dm_bar & ~1u) % nb : 0u;
-    if (L && play)
-        lw = (cf_sn.dm_nbar % (L->bars ? L->bars : 1u)) & ~1u;
-    steps = wn * sd;
     for (l = 0; l < SQ_NLANE; l++)
         nl += y->lane[l] != 0;
-    nl += L != 0;                                /* (TrapRoot: the 808 line, a row of its own under the drums) */
+    if (!nl && L) {
+        dm8_roll(L, x0 - 4, 232, yt + 4, Y_VIEW + H_VIEW - 20, play);
+        return;
+    }
+    /* (two bars at a time, the pair playing) */
+    wn = nb < 2u ? nb : 2u;
+    wb = play ? (cf_sn.dm_bar & ~1u) % nb : 0u;
+    steps = wn * sd;
+    nl += L != 0;                                /* (TrapRoot: the 808, a row of its own under the drums) */
     row = nl <= 4u ? 16 : nl <= 6u ? 13 : 9;
     for (l = 0; l < SQ_NLANE; l++) {
         int yr = yt + k * row;
@@ -118,10 +166,9 @@ static void view_drum(int x0)
             }
         }
     }
-    if (L && sd == 16u) {                        /* the 808 line: a drop a hit, a slide joined to the note before, a
-                                                  * roll a bar over it */
-        int yr = yt + k * row, px = -1;
-        uint32_t len = str_len(L->hit);
+    if (L && sd == 16u) {                        /* the 808: a drop a note, at its tick */
+        int yr = yt + k * row;
+        uint32_t bt = 4u * 96u, base = L->bars > 2u && play ? ((cf_sn.dm_nbar % L->bars) & ~1u) * bt : 0u;
         sq_ink_t ink;
         ink.ramp = FL_R_ROSE;
         ink.eye = FL_R_FIRE;
@@ -129,22 +176,11 @@ static void view_drum(int x0)
         fb_rect(x0 - 6, yr + 6, 26, 7, FL_BG);
         fb_text(&CF_FONT_UI, x0 - 4, yr + 3, "808", FL_INK2, 1);
         fb_hline(gx, yr + SQG_GND + 1, gw, FL_BG3);
-        for (i = 0; i < steps; i++) {
-            uint32_t at = lw * 16u + i;
-            int cw = gw / (int)steps, cx = gx + (int)i * gw / (int)steps + cw / 2;
-            char ch = at < len ? L->hit[at] : '.';
-            if ((i % sd) & 1u)
-                cx += (int)dm_swing(r) * cw / 200;
-            if (ch == '.') {
-                fb_rect(cx, yr + SQG_GND, 1, 1, FL_BG3);
-                continue;
-            }
-            if (ch == 's' && px >= 0)
-                fb_hline(px, yr + SQG_GND - 1, cx - px, FL_C(FL_R_ROSE, 1));
-            sq_flower(cx, yr, cw, 1, ink, 0);
-            if (ch >= '2' && ch <= '8')
-                fb_rect(cx - (ch - '0') / 2, yr + 1, ch - '0', 1, FL_C(FL_R_FIRE, 0));
-            px = cx;
+        for (i = 0; i < L->n; i++) {
+            uint32_t t = L->ev[i].t;
+            if (t >= base && t < base + wn * bt)
+                sq_flower(gx + (int)((t - base) * (uint32_t)gw / (wn * bt)) + gw / (int)steps / 2, yr,
+                          gw / (int)steps, 1, ink, 0);
         }
     }
     if (wn > 1u) {                               /* (the second bar begins: a dashed line) */
@@ -195,17 +231,13 @@ static void draw_drum(void)
     kint(a, y->bars, 0);
     str_cpy(t + str_len(t), a, sizeof t - str_len(t));
     str_cpy(t + str_len(t), y->bars > 1u ? " bars  ~" : " bar  ~", sizeof t - str_len(t));
-    kint(a, y->bpm, 0);                          /* (the tempo its style lives at: shown, TEMPO stays the user's) */
+    kint(a, y->bpm, 0);                          /* (its tempo: TrapRoot sets TEMPO to it when it is picked, dm_select) */
     str_cpy(t + str_len(t), a, sizeof t - str_len(t));
     str_cpy(t + str_len(t), " BPM", sizeof t - str_len(t));
     fb_text_halo(&CF_FONT_UI, cv_head_x, HEAD_LINE, t, C_ACC(1), FL_BG, 1);
     draw_view(view_drum);
-    {                                            /* (TrapRoot: the 808 line ALGORITHM picks, beside EDIT's use) */
-        char c[40];
-        str_cpy(c, "[EDIT] pattern  [ALGO] ", sizeof c);
-        str_cpy(c + str_len(c), dm8_name(dmr.rsv[0], r), sizeof c - str_len(c));
-        draw_chip_text_c(Y_VIEW + H_VIEW - 14, c, FL_INK3);
-    }   /* (rc5: the page's main use, on
+    draw_chip_text_c(Y_VIEW + H_VIEW - 14, dm_has_drums(r) ? "[EDIT] make it a pattern" : "808: it follows your chords",
+                     FL_INK3);                   /* (rc5: the page's main use, on
                                                   * it; the owner on rc4: "потерялась функция чтобы вставить барабаны из
                                                   * драм-машины в паттерны") */
     if (squ.help || squ.help_hold)

@@ -51,7 +51,6 @@ static void dm_defaults(void)
     memset(dmr.pos, 0xFF, sizeof dmr.pos);
     dmr.magic = DM_MAGIC;
     dmr.last = 1;                                /* (TrapRoot: PLAY on HOME plays a rhythm, the first: Rage) */
-    dm8_sel = 0;                                 /* (rsv[0]: each rhythm's own 808 line) */
 }
 /* rc3's record: its rhythms had the ids 0 .. 28 in its list's order (cf_drum.c kept them), so its tweaks are by id
  * already; the rhythm stood on was a place in a TIME SIG's list: 4/4's 0 .. 19, then two each in 3/4, 2/4, 5/4, 6/8
@@ -107,9 +106,7 @@ static void dm_load(void)
             dmr.swing[i] = 0xFF;
     }
     dmr.last = dmr.last == 1u;
-    if (dmr.rsv[0] != 0xFFu && dmr.rsv[0] > DM8_N)   /* (TrapRoot: the 808 line ALGORITHM picked; out of range: own) */
-        dmr.rsv[0] = 0;
-    dm8_sel = dmr.rsv[0];
+    dmr.rsv[0] = 0;                              /* (TrapRoot 0.1's 808 line pick, gone) */
     dm_saved = dm_seen = dm_check();
     if (r.magic != DM_MAGIC)                     /* (rc3's: rc4's written once, when it is quiet) */
         dm_saved = 0;
@@ -191,6 +188,30 @@ static uint32_t dm_cur(void)
                                                   * PLAY or SELECT switches TIME SIG to its) */
 }
 static uint32_t dm_uid(uint32_t r) { return DM_RHY[r % DM_N].id % DM_NMAX; }   /* (the user's are kept by the id) */
+static int dm_has_drums(uint32_t r)              /* TrapRoot: a rhythm with drums (Rage), not an 808 pattern alone */
+{
+    uint32_t l;
+    for (l = 0; l < SQ_NLANE; l++)
+        if (DM_RHY[r % DM_N].lane[l])
+            return 1;
+    return 0;
+}
+/* .. the rhythms with drums of a TIME SIG: how many, the k-th (EDIT held in DRUMS picks among them; DM_N: none) */
+static uint32_t dm_dcount(uint32_t beats)
+{
+    uint32_t i, n = 0;
+    for (i = 0; i < DM_N; i++)
+        n += DM_RHY[i].beats == beats && dm_has_drums(i);
+    return n;
+}
+static uint32_t dm_dnth(uint32_t beats, uint32_t k)
+{
+    uint32_t i;
+    for (i = 0; i < DM_N; i++)
+        if (DM_RHY[i].beats == beats && dm_has_drums(i) && !k--)
+            return i;
+    return DM_N;
+}
 static uint32_t dm_kit(uint32_t r) { return dmr.kit[dm_uid(r)] != 0xFFu ? dmr.kit[dm_uid(r)] : DM_RHY[r % DM_N].kit; }
 static uint32_t dm_swing(uint32_t r)
 {
@@ -324,6 +345,12 @@ static void dm_select(int d)
     dmr.pos[y->beats & 7u] = y->id;              /* (kept by its id, for its TIME SIG) */
     dmr.last = 1;
     cv_turned(d);
+    if (!cf_sn.ext_clock && y->bpm) {            /* (TrapRoot: an 808 pattern at its own tempo, the one its MIDI was
+                                                  * made at; TEMPO turns it after) */
+        cs.bpm = y->bpm;
+        cf_send_metro();
+        cf_send_config();
+    }
     if (y->beats == cs.beats) {
         dm_view = 0xFF;
         if (cf_sn.dm_on)
@@ -364,31 +391,6 @@ static void dm_page_play(void)                   /* PLAY in the drum machine */
     dmr.last = 1;
     dm_sig_for(dm_cur());                        /* (picked in another TIME SIG while a pattern played: now) */
     dm_play(dm_cur());
-}
-
-/* TrapRoot: ALGORITHM in the rhythm machine: the 808 line under every rhythm: Own (each rhythm's), one of DM8_LINES,
- * or None, in that order; kept with the rhythm machine's settings (dm_rec_t rsv[0]: 0 own, k line k, 0xFF none) */
-static const char *dm8_name(uint32_t sel, uint32_t r)
-{
-    uint32_t k = sel == 0u ? DM_RHY[r % DM_N].line : sel == 0xFFu ? 0u : sel;
-    return k && k <= DM8_N ? DM8_LINES[k - 1u].name : "None";
-}
-static void dm_algo(int d)
-{
-    int at = dmr.rsv[0] == 0xFFu ? (int)DM8_N + 1 : (int)dmr.rsv[0], n = (int)DM8_N + 2;
-    char m[32];
-    at = (at + d % n + n) % n;
-    dmr.rsv[0] = (uint8_t)(at == (int)DM8_N + 1 ? 0xFF : at);
-    dm8_sel = dmr.rsv[0];
-    str_cpy(m, "808: ", sizeof m);
-    if (!dmr.rsv[0]) {
-        str_cpy(m + str_len(m), "own (", sizeof m - str_len(m));
-        str_cpy(m + str_len(m), dm8_name(0, dm_cur()), sizeof m - str_len(m));
-        str_cpy(m + str_len(m), ")", sizeof m - str_len(m));
-    } else {
-        str_cpy(m + str_len(m), dm8_name(dmr.rsv[0], dm_cur()), sizeof m - str_len(m));
-    }
-    cf_message(m);
 }
 
 /* ---------------------------------------------- HOME and the other pages --- */
@@ -445,6 +447,10 @@ static void dm_make_pattern(void)
     int f;
     if (sqk.on || cf_sn.sq_rec != 0xFFu || cf_sn.dm_rin)
         return;                                  /* (a take under way: REC ends it first) */
+    if (!dm_has_drums(r)) {                      /* (an 808 pattern: no drums to edit) */
+        cf_message("An 808 pattern: play\nchords, the 808 follows");
+        return;
+    }
     f = sq_home_free();
     if (f < 0) {
         cf_message("All 8 patterns are used:\nclear one in the SEQUENCER");   /* (as REC says it) */
@@ -599,13 +605,13 @@ static void dm_hold_say(void)
     if (!dmh.k) {
         cf_message("Keep: your drums\nturn [PRESETS]: a rhythm");
     } else {
-        uint32_t r = dm_nth(dm_beats(), dmh.k - 1u);
+        uint32_t r = dm_dnth(dm_beats(), dmh.k - 1u);
         str_cpy(m, DM_RHY[r % DM_N].name, sizeof m);
         str_cpy(m + str_len(m), " ", sizeof m - str_len(m));   /* ("Pop 1/22": every counter N/M, rc6) */
         kint(a, dmh.k, 0);
         str_cpy(m + str_len(m), a, sizeof m - str_len(m));
         str_cpy(m + str_len(m), "/", sizeof m - str_len(m));
-        kint(a, (int)dm_count(dm_beats()), 0);
+        kint(a, (int)dm_dcount(dm_beats()), 0);
         str_cpy(m + str_len(m), a, sizeof m - str_len(m));
         str_cpy(m + str_len(m), "\nlet go of [EDIT]: it stays", sizeof m - str_len(m));
         cf_message(m);
@@ -645,7 +651,7 @@ static void dm_hold_apply(void)                  /* the pattern's DRUMS as PRESE
         p->tb[SQ_DRUMS] = dmh.tb;
         p->bars = dmh.bars;
     } else {
-        uint32_t r = dm_nth(dm_beats(), dmh.k - 1u), rb = DM_RHY[r % DM_N].bars, n = 0;
+        uint32_t r = dm_dnth(dm_beats(), dmh.k - 1u), rb = DM_RHY[r % DM_N].bars, n = 0;
         rb = rb ? rb : 1u;
         for (t = 0; t < SQ_DRUMS; t++)           /* (as long as the longest other track with something in it) */
             if (sq_own(p, t) && sq_tbars(p, t) > n)
@@ -665,7 +671,7 @@ static void dm_hold_apply(void)                  /* the pattern's DRUMS as PRESE
 }
 static void dm_hold_turn(int d)                  /* PRESETS while EDIT is held */
 {
-    int n = (int)dm_count(dm_beats()), k = clampi((int)dmh.k + d, 0, n);
+    int n = (int)dm_dcount(dm_beats()), k = clampi((int)dmh.k + d, 0, n);
     if ((uint32_t)k == dmh.k)
         return;
     dmh.k = (uint8_t)k;
@@ -703,7 +709,7 @@ static void dm_hold_poll(void)                   /* every frame: EDIT let go */
     if (dmh.k) {
         char m[24];
         str_cpy(m, "Drums: ", sizeof m);
-        str_cpy(m + 7, DM_RHY[dm_nth(dm_beats(), dmh.k - 1u) % DM_N].name, sizeof m - 7u);
+        str_cpy(m + 7, DM_RHY[dm_dnth(dm_beats(), dmh.k - 1u) % DM_N].name, sizeof m - 7u);
         cf_message(m);
     } else if (cu.pop == POP_MSG) {
         cu.pop = POP_NONE;

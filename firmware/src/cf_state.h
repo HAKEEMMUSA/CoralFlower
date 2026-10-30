@@ -104,7 +104,7 @@ static void cs_defaults(cf_set_t *s)
     s->bass_on = 1;
     s->octaver = 0;
     s->bass_oct = 0;
-    s->bass_level = 96;
+    s->bass_level = 112;                         /* (TrapRoot: 0 dB, the 808 up front, just under the limiter; CoralFlower's 96, -8 dB) */
     s->metro_level = 0;
     s->beats = 4;
     s->bpm = 180;                                 /* (TrapRoot: Rage's tempo, the first rhythm PLAY plays) */

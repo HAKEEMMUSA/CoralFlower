@@ -743,10 +743,6 @@ static void ui_algo(int d)                       /* ALGORITHM: the chord algorit
         sq_algo(d);
         return;
     }
-    if (cu.scr == SCR_DRUM) {                    /* (TrapRoot) the rhythm machine: the 808 line */
-        dm_algo(d);
-        return;
-    }
     {   /* ALGORITHM turns through the Lock variants first (the owner's order): Top Lock, Top, Side Lock, Side. The
          * stored ids stay CF_ALG_*: only the knob's order is this one. */
         static const uint8_t ORDER[CF_NALGS] = {CF_ALG_TOP_LOCK, CF_ALG_TOP, CF_ALG_SIDE_LOCK, CF_ALG_SIDE};

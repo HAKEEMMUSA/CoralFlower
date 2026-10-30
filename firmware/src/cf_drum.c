@@ -18,70 +18,13 @@ typedef struct {
     uint8_t bpm;                 /* the tempo its style lives at (shown, never set: the tempo is the user's) */
     const char *lane[SQ_NLANE];  /* each drum's hits, bar after bar; 0: the drum is not in it */
     uint8_t lev[SQ_NLANE];       /* .. its level, 0..100 % (a pattern's dlev) */
-    uint8_t line;                /* TrapRoot: its own 808 line, DL_* (DM8_LINES + 1; 0 none): while it plays the bass part
-                                  * plays the line (cf_play.c cfp_sync: the keys only set its note). ALGORITHM in the
-                                  * rhythm machine picks another for every rhythm, or none (dm8_sel) */
+    uint8_t line;                /* TrapRoot: its 808 pattern (DM8_LINES index + 1; 0 none): while it plays the bass part
+                                  * plays it (cf_play.c cfp_sync: the keys only set its root) */
 } dm_rhythm_t;
 
-/* TrapRoot: the 808 lines, after the owner's (their MIDI files, 2026-10-30; Rage's from their FL Studio pattern): 16
- * steps a bar, a line as long as its own phrase (2, 4 or 8 bars, round under any rhythm). hit a char a step: 'x' a
- * hit, 's' a slide into it from the note sounding, '2' .. '8' a roll of so many hits inside the step (the "spinz",
- * fading). note a char a step: 'm' the bass the keys play (the line's first note in its MIDI), 'n' .. 'y' +1 .. +12,
- * 'l' .. 'a' -1 .. -12, 'A' .. 'Z' +13 .. +38. Notes off the 16ths (Secret's triplets) on the nearest one. bpm: the
- * tempo the MIDI was written at (shown, never set) */
-typedef struct { const char *name; uint8_t bars, bpm; const char *hit, *note; } dm8_line_t;
-static const dm8_line_t DM8_LINES[] = {
-    {"Rage", 2, 180, "x..............." "................", "m..............." "................"},
-    {"Spinz 1", 2, 160,
-     "x.....x.....x..." "..x.....x.x...x.",
-     "m.....n.....m..." "..m.....H.m...y."},
-    {"Spinz 2", 8, 160,
-     "x...........2.x." "....x.....x.532." "x...........2.x." "....x...x.x.576." "x...........2.x." "....x.....x.532." "x...........2.x." "....x...x.x.576.",
-     "m...........m.m." "....n.....n.nnn." "m...........m.m." "....n...n.i.iii." "m...........m.m." "....n.....n.nnn." "m...........m.m." "....A...A.u.uuu."},
-    {"Spinz 3", 8, 160,
-     "x.....x.....xx.x" "2...x.....574..." "x.....x.....x..." "2...x.....578787" "5.....x.....xx.x" "2...x.....574..." "x.....x.....x..." "2...x.....578788",
-     "m.....m.....LL.L" "m...m.....mmm..." "m.....m.....m..." "m...m.....mmmyyy" "y.....m.....LL.L" "m...m.....mmm..." "m.....m.....m..." "m...m.....mmmyyy"},
-    {"Spinz 4", 4, 160,
-     "x.............33" "3...........x..." "..574..........." "332.x.....x.x...",
-     "m.............LX" "L...........n..." "..nnn..........." "XZX.m.....n.n..."},
-    {"Forsaken", 4, 160,
-     "x.............x." "..x.x.....x.x.x." "x.............x." "....x.....x.x...",
-     "m.............m." "..h.m.....m.m.m." "m.............m." "....m.....n.A..."},
-    {"King", 8, 160,
-     "x..............." "....x..........." "x.....x........." "....x.....x....." "x..............." "....x..........." "x.....x.......x." "....x.....x...x.",
-     "m..............." "....r..........." "t.....h........." "....m.....i....." "m..............." "....r..........." "t.....h.......h." "....m.....m...m."},
-    {"Bitcrush", 8, 160,
-     "x.............x." "..x.x.....x....." "x.............x." "..x.x.....x....." "x.............x." "..x.x.....x...x." "x.............x." "..x.x...x.x...x.",
-     "m.............m." "..m.m.....h....." "m.............m." "..m.m.....h....." "m.............m." "..m.m.....h...h." "m.............m." "..m.m...t.t...t."},
-    {"OhMyGawd", 4, 158,
-     "x..............." "....x.....x....." "x..............." "....x...........",
-     "m..............." "....u.....u....." "m..............." "....u..........."},
-    {"LuhTwizz", 4, 105,
-     "x.....x.....x..." "....x.....x.x..." "x.....x.....x..." "..x.x.....x.x...",
-     "m.....m.....m..." "....m.....h.i..." "m.....m.....m..." "..m.m.....h.i..."},
-    {"Chase", 8, 157,
-     "x.x...x.....x..." "..xs....x......." "x.x...x.....x.x." "..x.s...x......." "x.x...x.....x..." "..xs....x......." "x.x...x.....x..." "..x.s...x.......",
-     "m.m...m.....m..." "..to....k......." "m.m...m.....m.p." "..p.c...k......." "m.m...m.....m..." "..ho....k......." "m.m...m.....m..." "..p.o...k......."},
-    {"Chichi", 8, 146,
-     "x.............x." "..x.x.....xx..x." "x.............x." "..x.x.....x....." "x.............x." "..x.x.....xx..x." "x.............x." "..x.x.....x.....",
-     "m.............m." "..m.m.....tt..t." "m.............m." "..m.m.....t....." "m.............m." "..m.m.....hh..h." "m.............m." "..m.m.....t....."},
-    {"Quis", 4, 120,
-     "x...........x..." "....x.x.x.....x." "x...........x..." "....x.x.x.2...x.",
-     "m...........n..." "....i.n.n.....m." "m...........n..." "....i.n.n.n...m."},
-    {"Bounce", 8, 182,
-     "x.....x...x.x..." "....x.....x....." "x.........x.x..." "....x.....x....." "x.....x...x.x..." "....x.....x....." "x.....x...x.x..." "....x.....xxx.x.",
-     "y.....y...m.m..." "....m.....m....." "m.........m.m..." "....m.....A....." "y.....y...m.m..." "....m.....m....." "m.....m...m.m..." "....m.....nnn.n."},
-    {"Secret", 2, 130,
-     "x....x...x.x.x.." "...x...xxx.x.x.x",
-     "m....m...m.m.m.." "...m...mmm.m.y.m"},
-    {"SF RT", 4, 120,
-     "x.....x.....x..." "....x.....x....." "x.....x.....x..." "....x...........",
-     "m.....m.....m..." "....m.....m....." "m.....m.....m..." "....m..........."},
-};
-#define DM8_N ((uint32_t)(sizeof DM8_LINES / sizeof DM8_LINES[0]))
-enum { DL_NONE, DL_RAGE, DL_SPINZ1, DL_SPINZ2, DL_SPINZ3, DL_SPINZ4, DL_FORSAKEN, DL_KING, DL_BITCRUSH, DL_OHMYGAWD,
-       DL_LUHTWIZZ, DL_CHASE, DL_CHICHI, DL_QUIS, DL_BOUNCE, DL_SECRET, DL_SFRT, DL_END };
-typedef char dm8_lines_named[DL_END - 1 == (int)(sizeof DM8_LINES / sizeof DM8_LINES[0]) ? 1 : -1];
+/* TrapRoot: the 808 patterns (dm8_lines.h, generated from the owner's MIDI files by tools/trap/mid2lines.py; Rage's
+ * one hit from their FL Studio pattern): each note at its own tick, its velocity, a slide or not, one-shot */
+#include "dm8_lines.h"
 /* TrapRoot: a hit's character in a lane: 'x' a hit, 'X' an accent, 'o' a ghost note, '2' '3' '4' '6' '8' a roll of
  * that many hits inside the step (the trap hat rolls; the pattern's DRUMS keep its first hit) */
 
@@ -89,16 +32,11 @@ typedef char dm8_lines_named[DL_END - 1 == (int)(sizeof DM8_LINES / sizeof DM8_L
 enum { DMK_STD, DMK_808, DMK_909, DMK_TIGHT, DMK_BOOM, DMK_LOFI, DMK_HAND, DMK_CRUSH, DMK_XCLUB, DMK_XDEEP, DMK_XLOFI,
        DMK_XLIVE, DMK_XTECH, DMK_XBREAK, DMK_XRAGE };
 
-/* 4/4: the owner's list for rc4 ("моя прошивка больше ориентирована на более современные жанры"; rc3's Rock, Bossa,
- * Reggae, Swing, Motown, Dub, Afro, Ballad, Punk, Disco, Trap and Samba gone; "Все, решу на слух": every one proposed
- * is in, the owner cuts by ear before the release). Pop and HipHop on X Lo-Fi, Funk on X Club with SWING 40 %, DnB on
- * X Tech with more in it than two steps (the owner's). rc7, the owner by ear on rc6: Footwork ("убрать"), Phonk
- * ("кринж"), TrapWaltz and AfroHouse out; their ids 33, 37, 43, 44 are never reused (a kept KIT, SWING or place of
- * theirs is dropped, cf_dmui.c) */
+/* CoralFlower's own rhythms are out of TrapRoot (ids 0 .. 47 are the 808 patterns' now: a KIT or SWING a CoralFlower
+ * user kept on one of theirs lands on an 808 pattern, where neither does anything) */
 static const dm_rhythm_t DM_RHY[] = {
-    /* 4/4: 16 steps a bar */
-    /* TrapRoot: trap, rage and plugg first (ids 48 on). The hats roll ('3' '4' '6' '8'), the 808 line follows the chord
-     * (DM8_LINES); the kit is X Rage (drum_kits.c), the kick short: the 808 is the low end */
+    /* TrapRoot (the owner, 2026-10-30: "Aside from the rage lets remove the other ones ... the rhythms should only be
+     * just 808 patterns"): Rage, its drums and its 808; then the owner's 808 patterns, the 808 alone (DM8_RHYTHMS) */
     /* Rage: the owner's pick (an FL Studio pattern at 180 BPM, read from its channel rack): no kick, the 808 is the
      * low end and hits once every two bars; the snare on 1, 7, 13 and 21, 27 (the rage bounce), the clap on 3 of each
      * bar, one open hat (step 13), one shaker (bar 2's step 3, on the hat lane: the kits have no shaker) */
@@ -107,165 +45,7 @@ static const dm_rhythm_t DM_RHY[] = {
       [DM_O] = "............x..." "................", [DM_H] = "................" "..x............."},
      {[DM_S] = 100, [DM_C] = 85, [DM_O] = 55, [DM_H] = 50},
      DL_RAGE},
-    {"Atlanta", 49, 4, 2, DMK_XRAGE, 0, 140,
-     {[DM_K] = "x......x..x....." "x......x.x......", [DM_S] = "........X......." "........X.......",
-      [DM_C] = "........X......." "........X.......", [DM_H] = "xxxxxxxxxxxx3.xx" "xxxxxxxxxx4.xxx6",
-      [DM_R] = "..............o." "..............o."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 85, [DM_H] = 45, [DM_R] = 40},
-     DL_CHASE},
-    {"Carti", 50, 4, 2, DMK_XRAGE, 52, 150,
-     {[DM_K] = "x.........x....." "x......x..x.....", [DM_S] = "........X......." "........X.......",
-      [DM_C] = "........X......." "........X......o", [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.3.x.x.",
-      [DM_O] = "..x.......x....." "..x.......x.....", [DM_R] = "...x.......x...x" ".......x....x..."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 80, [DM_H] = 50, [DM_O] = 45, [DM_R] = 40},
-     DL_BOUNCE},
-    {"Opium", 51, 4, 2, DMK_XRAGE, 0, 165,
-     {[DM_K] = "x..x..x...x.x..." "x..x..x.x.x.x...", [DM_S] = "....X.......X..." "....X.......X...",
-      [DM_C] = "....X.......X..." "....X.......X...", [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.6.",
-      [DM_X] = "X..............." "X..............."},
-     {[DM_K] = 100, [DM_S] = 85, [DM_C] = 80, [DM_H] = 50, [DM_X] = 40},
-     DL_SPINZ2},
-    {"Plugg", 52, 4, 2, DMK_XRAGE, 54, 145,
-     {[DM_K] = "x.....x........." "x.....x...x.....", [DM_C] = "........X......." "........X.......",
-      [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.x.", [DM_R] = "...x.......x...x" "...x.......x.o.."},
-     {[DM_K] = 95, [DM_C] = 85, [DM_H] = 45, [DM_R] = 40},
-     DL_BITCRUSH},
-    {"Memphis", 53, 4, 2, DMK_XRAGE, 56, 135,
-     {[DM_K] = "x..x..x...x.x..." "x..x..x...x.x...", [DM_S] = "........X......." "........X.......",
-      [DM_H] = "xxxxxxxxxxxxxxxx" "xxxxxxxxxxxx4.xx", [DM_O] = "......x.......x." "......x.......x.",
-      [DM_B] = "x..x..x.x..x..x." "x..x..x.x..x.x.."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 40, [DM_O] = 45, [DM_B] = 45},
-     DL_QUIS},
-    {"TrapDrill", 54, 4, 2, DMK_XRAGE, 0, 142,
-     {[DM_K] = "x.........x....." "....x.....x.....", [DM_S] = "........X......." "....X...X.......",
-      [DM_H] = "x..x..x.x..x..x." "x..x..x.x.3.4.x.", [DM_R] = "......x.......x." "......x...x.....",
-      [DM_X] = "X..............." "................"},
-     {[DM_K] = 100, [DM_S] = 95, [DM_H] = 50, [DM_R] = 40, [DM_X] = 40},
-     DL_SPINZ4},
-    {"Rolls", 55, 4, 2, DMK_XRAGE, 0, 150,
-     {[DM_K] = "x.........x....." "x.........x.x...", [DM_S] = "........X......." "........X.......",
-      [DM_C] = "........X......." "........X.......", [DM_H] = "x.x.3.x.4.x.x6x." "x3x.x.4.x8x.6.88",
-      [DM_O] = "..............x." "..............x."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 80, [DM_H] = 50, [DM_O] = 45},
-     DL_SPINZ3},
-    /* GTR and Moet: the owner's drum loops (Cymatics, 4 bars), transcribed by their bands' onsets: kick under 110 Hz,
-     * snare and clap 0.2 .. 4 kHz, hats over 7 kHz, on the 32nds (two 32nds in a 16th: a roll of 2) */
-    {"GTR", 56, 4, 4, DMK_XRAGE, 0, 140,
-     {[DM_K] = "x..............." "....x.....x....." "x..............." "....x.....x.....",
-      [DM_S] = "........x......." "........x......." "........x......." "........x.......",
-      [DM_C] = "........x......." "........x......." "........x......." "........x.......",
-      [DM_H] = "2.x.x...x.x.x.x." "x.x.2.x.x.2xx.x." "2.x.x...x.x.x.x." "x.x.2xx.x.2xx.x."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 80, [DM_H] = 50},
-     DL_CHICHI},
-    {"Moet", 57, 4, 4, DMK_XRAGE, 0, 98,
-     {[DM_K] = "x..............." "...x..x........." "x..............." "...x..x....x....",
-      [DM_S] = "........x......." "........x.....x." "........x......." "........x...o.x.",
-      [DM_C] = "........x......." "........x......." "........x......." "........x.......",
-      [DM_H] = "..x.x.xxX.x.x.xx" "x.x...xxX.2x..xx" "x.x.x.xxX.xxx.xx" "x.x...xxX.2...xx"},
-     {[DM_K] = 100, [DM_S] = 90, [DM_C] = 70, [DM_H] = 50},
-     DL_LUHTWIZZ},
-    {"Pop", 1, 4, 1, DMK_XLOFI, 0, 110,
-     {[DM_K] = "x.....x.x.......", [DM_S] = "....x.......x...", [DM_C] = "....x.......x...",
-      [DM_H] = "x.x.x.x.x.x.x.x."},
-     {[DM_K] = 100, [DM_S] = 80, [DM_C] = 60, [DM_H] = 50}},
-    {"Funk", 2, 4, 2, DMK_XCLUB, 40, 105,
-     {[DM_K] = "x..x..x...x....." "x.x...x..x..x...", [DM_S] = "....x.......x..." "....x.......x...",
-      [DM_R] = ".......x.x....x." "..x....x.....x..", [DM_H] = "xxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxx..",
-      [DM_O] = "................" "..............x."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_R] = 35, [DM_H] = 40, [DM_O] = 50}},
-    {"HipHop", 7, 4, 2, DMK_XLOFI, 30, 90,
-     {[DM_K] = "x......x.x......" "x.........x.....", [DM_S] = "....x.......x..." "....x.......x...",
-      [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.x."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 50}},
-    {"Lo-fi", 30, 4, 2, DMK_XLOFI, 45, 80,
-     {[DM_K] = "x.......x.x....." "x......x..x.....", [DM_S] = "....x.......x..." "....x.......x...",
-      [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.xx.."},
-     {[DM_K] = 90, [DM_S] = 75, [DM_H] = 35}},
-    {"House", 4, 4, 1, DMK_909, 0, 124,
-     {[DM_K] = "x...x...x...x...", [DM_C] = "....x.......x...", [DM_H] = ".x.x.x.x.x.x.x.x",
-      [DM_O] = "..x...x...x...x."},
-     {[DM_K] = 100, [DM_C] = 80, [DM_H] = 35, [DM_O] = 60}},
-    {"Garage", 18, 4, 1, DMK_XCLUB, 55, 132,
-     {[DM_K] = "x......x..x.....", [DM_S] = "....x.......x...", [DM_H] = "x.xxx.xxx.xxx.xx"},
-     {[DM_K] = 100, [DM_S] = 85, [DM_H] = 40}},
-    {"Techno", 5, 4, 1, DMK_XTECH, 0, 132,
-     {[DM_K] = "x...x...x...x...", [DM_C] = "....x.......x...", [DM_H] = "xx..xx..xx..xx..",
-      [DM_O] = "..x...x...x...x.", [DM_R] = "...x.....x....x."},
-     {[DM_K] = 100, [DM_C] = 70, [DM_H] = 40, [DM_O] = 55, [DM_R] = 45}},
-    {"Break", 13, 4, 2, DMK_XBREAK, 10, 130,
-     {[DM_K] = "x.x.......xx...." "x.x.......x.....", [DM_S] = "....x..x.x..x..x" "....x..x.x....x.",
-      [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.x."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 50}},
-    {"Jungle", 31, 4, 2, DMK_XBREAK, 0, 165,
-     {[DM_K] = "x.........x....." "..x.......x.....", [DM_S] = "....x.x....x.x.." "....x..x.x..x.x.",
-      [DM_R] = ".x....x.x......x" "x....x......x...", [DM_H] = "xxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxx",
-      [DM_X] = "x..............." "................"},
-     {[DM_K] = 100, [DM_S] = 90, [DM_R] = 35, [DM_H] = 30, [DM_X] = 40}},
-    {"DnB", 14, 4, 2, DMK_XTECH, 0, 174,
-     {[DM_K] = "x.........x....." "x.x.......x..x..", [DM_S] = "....x.......x..." "....x.......x...",
-      [DM_R] = ".......x.x....x." "..x....x.......x", [DM_H] = "x.xxx.x.x.xxx.x." "x.x.x.xxx.x.x.x.",
-      [DM_X] = "x..............." "................"},
-     {[DM_K] = 100, [DM_S] = 95, [DM_R] = 35, [DM_H] = 45, [DM_X] = 40}},
-    {"Breakcore", 39, 4, 2, DMK_XBREAK, 0, 180,
-     {[DM_K] = "x.x...x...x.x..." "x...x.x..x...x..", [DM_S] = "....x..xx..x.x.x" "..x.x.x..x.xx.xx",
-      [DM_H] = "xxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxx", [DM_X] = "x..............." "................"},
-     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 35, [DM_X] = 40}},
-    /* Jersey club (the owner on rc6: "джерси не похож на джерси клаб бит"): its five-kick figure, two quarters, two
-     * dotted eighths and an eighth (steps 1 5 9 12 15), a kick roll into the next bar; claps on 2 and 4; the bed squeak
-     * as a rim answering on the off-beats; open hats on the "and"s */
-    {"Jersey", 32, 4, 2, DMK_XCLUB, 0, 140,
-     {[DM_K] = "x...x...x..x..x." "x...x...x..x.xxx", [DM_C] = "....x.......x..." "....x.......x...",
-      [DM_R] = "......x.......x." "......x...x...x.", [DM_O] = "..x...x...x...x." "..x...x...x....."},
-     {[DM_K] = 100, [DM_C] = 85, [DM_R] = 55, [DM_O] = 35}},
-    {"Hyperpop", 34, 4, 2, DMK_CRUSH, 0, 150,
-     {[DM_K] = "x.....x...x....." "x.....x.x.x.....", [DM_C] = "....x.......x..." "....x.......x...",
-      [DM_H] = "x.x.x.x.x.x.xxxx" "x.x.x.x.xxxxxxxx", [DM_X] = "x..............." "................"},
-     {[DM_K] = 100, [DM_C] = 90, [DM_H] = 40, [DM_X] = 35}},
-    {"Drill", 35, 4, 2, DMK_XTECH, 15, 142,             /* (X Tech: the owner on rc6) */
-     {[DM_K] = "x......x...x...." "..x....x..x.x...", [DM_S] = "........x......." "........x.....x.",
-      [DM_H] = "x..x..x.x..x..x." "x..x..x.x.xx..x."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 45}},
-    {"Grime", 36, 4, 2, DMK_TIGHT, 0, 140,
-     {[DM_K] = "x.....x...x..x.." "x..x......x.....", [DM_S] = "........x......." "........x.......",
-      [DM_H] = "x...x...x...x..." "x...x...x...x.x."},
-     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 40}},
-    {"Halftime", 38, 4, 2, DMK_XDEEP, 0, 140,
-     {[DM_K] = "x.........x....." "x......x.x......", [DM_S] = "........x......." "........x.......",
-      [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.x."},
-     {[DM_K] = 100, [DM_S] = 95, [DM_H] = 35}},
-    {"Amapiano", 40, 4, 2, DMK_XTECH, 0, 112,           /* (X Tech: the owner on rc6) */
-     {[DM_K] = "x...x...x...x..." "x...x...x...x...", [DM_LT] = "...x..x...x..x.." "..x..x....x...x.",
-      [DM_R] = "....x.......x..." "....x.......x...", [DM_H] = "xxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxx"},
-     {[DM_K] = 85, [DM_LT] = 90, [DM_R] = 60, [DM_H] = 30}},
-    {"Baile", 41, 4, 2, DMK_808, 0, 130,
-     {[DM_K] = "x.....x...x....." "x.....x...x.x...", [DM_MT] = "...x.....x...x.." "...x.....x...x..",
-      [DM_LT] = "..x.....x.....x." "..x.....x.....x.", [DM_C] = "....x.......x..." "....x.......x..."},
-     {[DM_K] = 100, [DM_MT] = 75, [DM_LT] = 80, [DM_C] = 80}},
-    {"Dembow", 42, 4, 1, DMK_XCLUB, 0, 95,
-     {[DM_K] = "x...x...x...x...", [DM_S] = "...x..x....x..x.", [DM_H] = "x.x.x.x.x.x.x.x."},
-     {[DM_K] = 100, [DM_S] = 85, [DM_H] = 35}},
-    /* (the owner on rc6: "поп рок в конец, не оч он как-то": the last of the 4/4 ones) */
-    {"PopRock", 29, 4, 2, DMK_XLIVE, 0, 120,
-     {[DM_K] = "x.......x.x....." "x.....x.x.......", [DM_S] = "....x.......x..." "....x.......x...",
-      [DM_H] = "x.x.x.x.x.x.x.x." "x.x.x.x.x.x.x.x.", [DM_X] = "x..............." "................"},
-     {[DM_K] = 100, [DM_S] = 90, [DM_H] = 55, [DM_X] = 45}},
-    /* the other TIME SIGs: modern takes (the owner's pick B for rc4: "3/4 trap-waltz, 6/8 afro-house, 5/4 and 7/4
-     * math-rock, 2/4 baile"; rc3's Waltz, Jazz3, March, Polka, Five, Odd5, Blues, Bembe and Seven gone). A 6/8 bar is
-     * 6 beats of 8ths: its tempo counts 8ths */
-    /* (3/4 and 6/8: none since rc7, TrapWaltz and AfroHouse cut by the owner: "полная ебанина", "кринж") */
-    /* 2/4: 8 steps */
-    {"Tamborzao", 47, 2, 2, DMK_808, 0, 130,
-     {[DM_K] = "x..x..x." "x..x..x.", [DM_MT] = ".x...x.." ".x...x.x", [DM_LT] = "..x....x" "..x.....",
-      [DM_C] = "....x..." "....x..."},
-     {[DM_K] = 100, [DM_MT] = 75, [DM_LT] = 80, [DM_C] = 80}},
-    /* 5/4: 10 steps (8ths) */
-    {"MathRock", 45, 5, 1, DMK_XLIVE, 0, 140,
-     {[DM_K] = "x..x..x...", [DM_S] = "....x...x.", [DM_H] = "x.x.x.x.x.", [DM_X] = "x........."},
-     {[DM_K] = 95, [DM_S] = 90, [DM_H] = 45, [DM_X] = 35}},
-    /* 7/4: 14 steps (8ths) */
-    {"MathRock", 46, 7, 1, DMK_XLIVE, 0, 130,
-     {[DM_K] = "x...x...x..x..", [DM_S] = "..x...x...x..x", [DM_H] = "xxxxxxxxxxxxxx", [DM_X] = "x............."},
-     {[DM_K] = 95, [DM_S] = 90, [DM_H] = 35, [DM_X] = 35}},
+    DM8_RHYTHMS
 };
 #define DM_N ((uint32_t)(sizeof DM_RHY / sizeof DM_RHY[0]))
 
@@ -362,18 +142,15 @@ static void dm_strike(uint32_t l, uint32_t vel)
 }
 
 /* ------------------------------------------------- TrapRoot: the 808 line --- */
-/* the bass part plays the rhythm's 808 line: each hit the note the keys' bass would play (dm8.root: the last chord's,
- * kept while no key is down; none yet: the key's tonic in the second octave) plus the step's interval; a slide step
- * glides into it from the note sounding (the 808 engine's GLIDE, legato), a hit strikes it afresh */
-static struct { uint8_t root, have, cur; } dm8;
-static struct { uint8_t n, k, note; uint16_t t0, len; } dm8r;   /* an 808 roll under way (as dmroll) */
-/* ALGORITHM in the rhythm machine (cf_dmui.c dm_algo, kept in dm_rec_t's rsv[0]): 0 each rhythm's own line, k a line
- * (DL_*) for every rhythm, 0xFF none. A byte the UI writes and the audio reads */
-static volatile uint8_t dm8_sel;
+/* the bass part plays the rhythm's 808 pattern, tick by tick (dm8_tick): each note the bass the keys would play
+ * (dm8.root: the last chord's, kept while no key is down; none yet: the key's tonic), put in the 808's own octave (C1 ..
+ * B1), plus the note's interval; at its velocity; one-shot, until the next note (dm8.left); a slide glides into its note
+ * from the one sounding (the 808 engine's GLIDE, legato), any other note strikes afresh */
+static struct { uint8_t root, have, cur; uint16_t ix, left, last; } dm8;
 static const dm8_line_t *dm8_line_of(uint32_t r)
 {
-    uint32_t k = dm8_sel == 0u ? DM_RHY[r % DM_N].line : dm8_sel == 0xFFu ? 0u : dm8_sel;
-    return k && k <= DM8_N && dm_steps(DM_RHY[r % DM_N].beats) == 16u ? &DM8_LINES[k - 1u] : 0;
+    uint32_t k = DM_RHY[r % DM_N].line;
+    return k && k <= DM8_N && DM_RHY[r % DM_N].beats == 4u ? &DM8_LINES[k - 1u] : 0;
 }
 static int dm8_active(void)
 {
@@ -414,42 +191,35 @@ static void dm8_strike(uint32_t note, uint32_t vel, int slide)
     }
     dm8.cur = (uint8_t)note;
 }
-static int dm8_iv(char c)                        /* a note char: its interval over the root */
-{
-    return c >= 'a' && c <= 'y' ? c - 'm' : c >= 'A' && c <= 'Z' ? 13 + (c - 'A') : 0;
-}
-static void dm8_step(uint32_t h)
+/* every tick of a rhythm (dmp_tick1, dmp_start): the note sounding ends when its time is up, then the pattern's notes
+ * at this tick sound (its own bars, round from the rhythm's start) */
+static void dm8_tick(void)
 {
     const dm8_line_t *L = dm8_line_of(dmp.r);
-    uint32_t k, n;
-    char c;
-    int note;
-    if (!dm8_active() || !L || h >= 16u)
+    uint32_t bt = sqp_bar_ticks(), T;
+    if (dm8.cur && dm8.left && !--dm8.left)
+        dm8_off();
+    if (!L || !dm8_active())
         return;
-    k = (dmp.nbar % (L->bars ? L->bars : 1u)) * 16u + h;   /* (the line's own bars, round from the rhythm's start) */
-    if (k >= str_len(L->hit))
-        return;
-    c = L->hit[k];
-    n = c >= '2' && c <= '8' ? (uint32_t)(c - '0') : 0u;
-    if (c != 'x' && c != 's' && !n)
-        return;
-    note = dm8.have ? (int)dm8.root : 24 + (int)cfc.cfg.tonic;
-    while (note > 35)                            /* (the root in the 808's own octave, C1 .. B1: deep, whatever the keys'
-                                                  * octave; the line's intervals over it) */
-        note -= 12;
-    while (note < 24)
-        note += 12;
-    note += dm8_iv(k < str_len(L->note) ? L->note[k] : 'm');
-    while (note < 18)
-        note += 12;
-    while (note > 71)
-        note -= 12;
-    dm8_strike((uint32_t)note, 110, c == 's');
-    dm8r.n = (uint8_t)n;                         /* (a roll: the "spinz", its other hits fading, in dmr_now) */
-    dm8r.k = 1;
-    dm8r.note = (uint8_t)note;
-    dm8r.t0 = (uint16_t)dmp_tick_of(h);
-    dm8r.len = (uint16_t)(sqp_bar_ticks() / sq_dsteps());
+    T = (dmp.nbar % L->bars) * bt + dmp.t;
+    if (T == 0u || T < dm8.last)                 /* (its top again, or another rhythm) */
+        dm8.ix = 0;
+    dm8.last = (uint16_t)T;
+    while (dm8.ix < L->n && L->ev[dm8.ix].t <= T) {
+        const dm8_ev_t *e = &L->ev[dm8.ix++];
+        int note = dm8.have ? (int)dm8.root : 24 + (int)cfc.cfg.tonic;
+        while (note > 35)
+            note -= 12;
+        while (note < 24)
+            note += 12;
+        note += e->iv;
+        while (note < 18)
+            note += 12;
+        while (note > 71)
+            note -= 12;
+        dm8_strike((uint32_t)note, (e->vel & 127u) ? (e->vel & 127u) : 1u, (e->vel & 128u) != 0u);
+        dm8.left = e->len;
+    }
 }
 /* every block: the line stopped (the rhythm stopped, another without one, the bass switched off): its note goes and
  * the keys' bass comes back */
@@ -476,7 +246,6 @@ static void dmp_fire(uint32_t h)
             dmroll[l].t0 = (uint16_t)dmp_tick_of(h);
             dmroll[l].len = (uint16_t)(sqp_bar_ticks() / sq_dsteps());
         }
-    dm8_step(h);
 }
 static void dmr_now(void)
 {
@@ -486,11 +255,6 @@ static void dmr_now(void)
             dm_strike(l, 72u + 24u * (uint32_t)dmroll[l].k / dmroll[l].n);   /* (a roll swells into its last hit) */
             dmroll[l].k++;
         }
-    while (dm8r.k < dm8r.n && dmp.t >= dm8r.t0 + (uint32_t)dm8r.k * dm8r.len / dm8r.n) {
-        if (dm8_active())
-            dm8_strike(dm8r.note, 30u + 80u * (uint32_t)(dm8r.n - dm8r.k) / dm8r.n, 0);
-        dm8r.k++;
-    }
 }
 static void dmp_now(void)
 {
@@ -533,6 +297,9 @@ static void dmp_start(uint32_t r, uint32_t kit, uint32_t swing)
     cfm_restart();
     cfm.running = 1;
     dmp_now();
+    dm8.ix = 0;                                  /* (TrapRoot: the 808 pattern from its top) */
+    dm8.last = 0;
+    dm8_tick();
 }
 /* REC in the SEQUENCER while a rhythm plays: its bar ends first, then pattern pat plays from its top, the take into
  * track trk */
@@ -555,7 +322,6 @@ static void dmp_next_bar(void)
     dmp.nh = 0;
     for (l = 0; l < SQ_NLANE; l++)               /* (a roll ends with its bar) */
         dmroll[l].n = 0;
-    dm8r.n = 0;
     if (dmp.rin && !--dmp.rbars) {               /* (REC in: the pattern takes over at this bar line) */
         uint32_t pat = dmp.rin - 1u, trk = dmp.rtrk;
         dmp_stop();
@@ -588,8 +354,10 @@ static void dmp_tick1(void)
     sqp_drum_offs();
     if (++dmp.t >= sqp_bar_ticks())
         dmp_next_bar();
-    if (dmp.on)
+    if (dmp.on) {
         dmp_now();
+        dm8_tick();
+    }
 }
 static void dmp_tick(uint32_t n, uint32_t pulses)   /* every audio block, as sqp_tick */
 {

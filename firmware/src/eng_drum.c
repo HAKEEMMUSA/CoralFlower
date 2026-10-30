@@ -31,6 +31,8 @@
 #include "drum_voice.c"
 #ifdef DRUM_LANE_KNOBS
 #include "drum_synth.c"                  /* CoralFlower's second engine: its kits' lanes play it */
+#include "drum_smp.h"                    /* TrapRoot: the owner's samples, a kit's lanes play them (sq_kit_smp) */
+typedef struct { const int16_t *d; uint16_t n, pos; int32_t g; } dsm_voice_t;   /* a sample playing: g its level, Q15 */
 #endif
 
 enum { DK_STD, DK_HAND, DK_CYM, DK_HCYM };
@@ -48,6 +50,7 @@ typedef struct {
             dv_metal_t mb;
         };
         ds_voice_t n;            /* .. or the second engine's voice (drum_synth.c), while eng */
+        dsm_voice_t sm;          /* .. or a sample (TrapRoot), while smp */
     };
 #else
     dv_coef_t c;
@@ -58,6 +61,7 @@ typedef struct {
     uint8_t role;                /* the drum struck (DVT_*) */
     int8_t st;                   /* its semitones from the designed pitch (the GM map) */
     uint8_t eng;                 /* 0: drum_voice.c's drum; k + 1: the second engine's kit k (drum_synth.c) */
+    uint8_t smp;                 /* TrapRoot: k + 1: sample k (drum_smp.h) plays instead (eng 0 then) */
 } drum_lane_t;
 #ifdef DRUM_LANE_KNOBS
 _Static_assert(sizeof(ds_voice_t) <= sizeof(dv_coef_t) + sizeof(dv_voice_t) + sizeof(dv_metal_t),
@@ -79,6 +83,8 @@ static int16_t drum_lane_knobs[DRUM_NPART][DV_NLANE][9];   /* (8: the second eng
                                                             * drum_voice.c's drum) */
 static uint8_t drum_lane_att[DRUM_NPART][DV_NLANE];   /* .. and its level taken down from the design's: 100 - LEVEL %
                                                        * (0: as designed; CoralFlower: a drum's level, K2) */
+static uint8_t drum_lane_smp[DRUM_NPART][DV_NLANE];   /* TrapRoot: k + 1: the lane plays sample k (0: a drum) */
+#define DRUM_SMP_GAIN 41000                      /* (a sample at its own level, +2 dB: as loud as the kit's drums by RMS) */
 #endif
 /* knob i (0 KIT .. 7 DRV) of lane `lane` of the part t plays */
 static int32_t drum_knob(const track_t *t, uint32_t lane, uint32_t i)
@@ -228,6 +234,8 @@ static voice_t *drum_reuse(track_t *t, uint32_t note)
 static int drum_live(const drum_lane_t *L)
 {
 #ifdef DRUM_LANE_KNOBS
+    if (L->smp)
+        return L->sm.pos < L->sm.n;
     if (L->eng)
         return L->n.live;
 #endif
@@ -249,20 +257,32 @@ static void drum_note_on(track_t *t, voice_t *v)
         L->owner = 0;
     L = &K[lane];
 #ifdef DRUM_LANE_KNOBS
-    if (drum_lane_knobs[t - trk - DRUM_PART0][lane][8] > 0) {   /* the second engine's kit: its sound, from rest */
+    if (drum_lane_smp[t - trk - DRUM_PART0][lane] && drum_lane_smp[t - trk - DRUM_PART0][lane] <= DRUM_NSMP) {
+        const drum_smp_t *S = &DRUM_SMP[drum_lane_smp[t - trk - DRUM_PART0][lane] - 1u];   /* TrapRoot: a sample */
+        L->smp = drum_lane_smp[t - trk - DRUM_PART0][lane];
+        L->eng = 0;
+        L->role = (uint8_t)role;
+        L->key.type = 0xFF;                              /* (drum_voice.c's state is gone: from rest when back) */
+        L->sm.d = S->d;
+        L->sm.n = S->n;
+        L->sm.pos = 0;
+        L->sm.g = DRUM_SMP_GAIN * (int32_t)(100u - drum_lane_att[t - trk - DRUM_PART0][lane]) / 100;
+    } else if (drum_lane_knobs[t - trk - DRUM_PART0][lane][8] > 0) {   /* the second engine's kit: its sound, from rest */
         uint32_t k = ((uint32_t)drum_lane_knobs[t - trk - DRUM_PART0][lane][8] - 1u) % DS_NKIT, s = DS_ROLE_SND[role];
         L->eng = (uint8_t)(k + 1u);
+        L->smp = 0;
         L->role = (uint8_t)role;
         L->key.type = 0xFF;                              /* (drum_voice.c's state is gone: from rest when back) */
         ds_strike(&L->n, &DS_KITS[k], s, st, 100u - drum_lane_att[t - trk - DRUM_PART0][lane]);
     } else
 #endif
     {
-        if (L->eng || L->role != role || L->v.type != role) {   /* another drum on this lane: from rest */
+        if (L->eng || L->smp || L->role != role || L->v.type != role) {   /* another drum on this lane: from rest */
 #ifdef DRUM_LANE_KNOBS
-            if (L->eng)                                  /* (back from the second engine: its squares from 0 too, as
-                                                          * after a power-on) */
+            if (L->eng || L->smp)                        /* (back from the second engine or a sample: its squares from
+                                                          * 0 too, as after a power-on) */
                 memset(&L->mb, 0, sizeof L->mb);
+            L->smp = 0;
 #endif
             dv_init(&L->v, role);
             L->key.type = 0xFF;
@@ -277,7 +297,9 @@ static void drum_note_on(track_t *t, voice_t *v)
     v->env_out = v->vel * 258;                           /* the hit starts at its level (no ramp from 0) */
     if (lane == DV_HATC && drum_live(&K[DV_HATO])) {     /* a closed hat chokes the open one */
 #ifdef DRUM_LANE_KNOBS
-        if (K[DV_HATO].eng)
+        if (K[DV_HATO].smp)
+            K[DV_HATO].sm.pos = K[DV_HATO].sm.n;
+        else if (K[DV_HATO].eng)
             ds_choke(&K[DV_HATO].n);
         else
 #endif
@@ -311,6 +333,8 @@ static int32_t drum_level(track_t *t, const voice_t *v)
     if (!L || !drum_live(L))
         return 0;
 #ifdef DRUM_LANE_KNOBS
+    if (L->smp)                                          /* (a sample: as far as it has to go) */
+        return mulq15(32767 - (int32_t)((uint32_t)L->sm.pos * 32767u / (L->sm.n ? L->sm.n : 1u)), v->vel * 258);
     if (L->eng)
         return mulq15(ds_level(&L->n), v->vel * 258);
 #endif
@@ -327,6 +351,13 @@ static void drum_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
     if (!L)
         return;
 #ifdef DRUM_LANE_KNOBS
+    if (L->smp) {                                        /* TrapRoot: the sample, as it is (the kit's knobs do nothing) */
+        if (n > CTL)
+            n = CTL;
+        for (i = 0; i < n && L->sm.pos < L->sm.n; i++)
+            out[i] += voice_amp(mulq15(L->sm.d[L->sm.pos++], L->sm.g), m, i) * 2;
+        return;
+    }
     if (L->eng) {                                        /* the second engine: its sound is the kit's (drum_synth.c) */
         if (n > CTL)
             n = CTL;

@@ -6,11 +6,9 @@ arpeggiator, the sequencer and its song, the rhythm machine, the effects, the so
 
 - **An 808 engine** on the bass: a tuned kick-bass with pitch punch, a long tail, slides, and six waveshapers from a
   clean sub to a blown-out rage 808. Ten presets, first in the bass list.
-- **Trap rhythms** in the rhythm machine, first in its list: Rage, Atlanta, Carti, Opium, Plugg, Memphis, TrapDrill and
-  Rolls. They have **hat rolls** (x2 to x8 hits in a step), accents and ghost notes, and an **808 line** that plays the
-  bass at the root of your chord, with slides.
-- **X Rage**, a drum kit for them: a short punchy kick (the 808 is the low end), a high cracking snare, a wide clap,
-  tight bright hats.
+- **A rhythm machine of 808 patterns**: **Rage** (drums and an 808), then 33 of your own 808 MIDI patterns, the 808
+  alone, each note at its own tick and velocity, with its slides and rolls, over the root of the chord you play.
+- **Your two snares**, Metro 2 and Mafia, played as the samples they are on the X Rage kit's snare and clap.
 - **Eight rage leads** for the chords and the layer: RAGE SAW, KEN LEAD, ICE BELL, DARK PLUCK, TRAP FLUTE, HYPER PAD,
   SIREN, PLUGG KEYS.
 - **A fallen angel** in the flower's place, who reacts to your chords and turns demonic as the song plays.
@@ -34,26 +32,73 @@ installing CoralFlower again takes it back.
 
 ## Making a beat
 
-1. **PLAY**. On a new unit, PLAY on HOME starts the first rhythm, **Rage**, at 180 BPM. The 808 line takes over the
-   bass. (BASS on the LFO button must be on, as it is by default.)
+1. **PLAY**. On a new unit, PLAY on HOME starts the first rhythm, **Rage**, at 180 BPM. Its 808 takes over the bass.
+   (BASS on the LFO button must be on, as it is by default.)
 2. **Tap a chord button** (Top layout: the upper row; **m** for minor). With Lock it stays on.
-3. **Play roots** on the lower row. The 808 hits land on each new root, slides glide into it, and the chords use
-   the chord sound (RAGE SAW by default).
-4. **SEQ twice** opens the rhythm machine (TrapRoot opens it rather than the sequencer). **SELECT** picks a rhythm;
-   it comes in at the next bar line. KIT, VOLUME, TEMPO and SWING are on the knobs.
-5. **EDIT** in the rhythm machine makes the rhythm a pattern and opens its drums to edit (below). REC records a take
-   over it, as in CoralFlower.
+3. **Play roots** on the lower row. The 808 plays its pattern on each new root, and the chords use the chord sound
+   (RAGE SAW by default).
+4. **SEQ twice** opens the rhythm machine. **SELECT** picks a rhythm: Rage, or one of your 808 patterns. Picking one
+   sets **TEMPO** to the tempo its MIDI was made at (shown under its name); K3 turns it after. A rhythm picked while
+   another plays comes in at the next bar line.
+5. **EDIT** on Rage makes it a pattern and opens its drums to edit (below); an 808 pattern has no drums to edit. REC
+   records a take over any rhythm, as in CoralFlower.
 6. **SELECT on HOME** changes the 808 (the bass sound); **PRESETS** changes the chord sound.
-
-The tempo is the user's, as in CoralFlower. Each rhythm shows the tempo its style lives at (Rage ~180, Atlanta ~140,
-Opium ~165, Plugg ~145, Memphis ~135).
 
 ### Rage
 
 Rage is an FL Studio pattern you picked, read from its channel rack at 180 BPM. It has no kick: the 808 is the low end
 and hits once every two bars. The snare plays on steps 1, 7 and 13 of bar 1 and 5 and 11 of bar 2 (the rage bounce),
 the clap on beat 3 of each bar, one open hat at step 13, and one shaker at bar 2's step 3. The shaker is on the hat
-lane, since the kits have no shaker.
+lane, since the kits have no shaker. The snare is your **Metro 2** and the clap your **Mafia** (below).
+
+### The 808 patterns
+
+After Rage, the rhythm machine holds your 808 MIDI files, one rhythm each, with the 808 alone and no drums. They are
+listed in the order of their numbers (246 to 263, then 282 to 298); 292 and 293 were copies of 283 and 282 and are
+left out.
+
+| # | Name | Bars | BPM | # | Name | Bars | BPM |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 246 | Short | 8 | 108 | 282 | Spinz 1 | 2 | 160 |
+| 247 | LastSpinz | 8 | 146 | 283 | Spinz 2 | 8 | 160 |
+| 248 | UseALot 1 | 8 | 160 | 284 | SF RT | 4 | 120 |
+| 249 | UseALot 2 | 8 | 140 | 285 | Forsaken | 4 | 160 |
+| 250 | UseALot 3 | 8 | 140 | 286 | King | 8 | 160 |
+| 251 | Zay 1 | 4 | 130 | 287 | Bitcrush | 8 | 160 |
+| 252 | MingoJugg | 4 | 150 | 288 | OhMyGawd | 4 | 158 |
+| 253 | Zay 2 | 8 | 130 | 289 | LuhTwizz | 4 | 105 |
+| 254 | Louder 1 | 4 | 140 | 290 | Chase | 8 | 157 |
+| 255 | Louder 2 | 8 | 140 | 291 | Chichi | 8 | 146 |
+| 256 | Jugg | 8 | 147 | 294 | Quis | 4 | 120 |
+| 257 | Spinz 5 | 8 | 130 | 295 | Spinz 3 | 8 | 160 |
+| 258 | Spinz 6 | 8 | 130 | 296 | Spinz 4 | 4 | 160 |
+| 259 | Spinz 7 | 8 | 130 | 297 | Bounce | 8 | 182 |
+| 260 | Spinz 8 | 8 | 155 | 298 | Secret | 2 | 130 |
+| 261 | Mingo | 2 | 110 | | | | |
+| 262 | Goon | 8 | 100 | | | | |
+| 263 | New Rack | 8 | 150 | | | | |
+
+Each note plays at its own tick (96 to a beat, as in the MIDI file), so off-grid notes, triplets and fast rolls keep
+their timing. Each keeps its velocity, so the fading and swelling rolls fade and swell. A note that starts while the one
+before still sounds (in the file) at another pitch slides into it with the 808's GLIDE. Notes play one-shot, as an 808
+sample rings in FL Studio: each sounds until the next starts, whatever its length in the file, and a long one fades by
+the 808's own decay. A file whose second half repeats its first is kept as the half (the Bars column). Goon's two tracks play as one 808.
+
+The patterns are intervals over the most frequent note in each file. The 808 plays them over the root of the chord you
+play (the last chord's, kept while no key is down; before any, the key's tonic), in the 808's own octave, C1 to B1. The
+chords no longer strike the bass themselves while a pattern plays. When the rhythm stops, the keys' bass comes back.
+The view shows a pattern as a piano roll, two bars at a time: a note a bar from its tick to the next note, higher for a
+higher note, brighter for a louder one, a slide joined to the note before.
+
+`tools/trap/mid2lines.py` turns the MIDI files into `firmware/src/dm8_lines.h`. Send more and they become rhythms the
+same way.
+
+### Your snares
+
+Metro 2 (37 ms) and Mafia (60 ms) play as the samples they are: 16-bit, 44.1 kHz, mono (their two channels were the
+same), no resampling. The **X Rage** kit plays Metro 2 on its snare and Mafia on its clap, so Rage and any pattern on X
+Rage use them. They take the drum's LEVEL; the kit's other knobs do nothing to a sample. `tools/trap/wav2smp.py` turns
+WAV files into `firmware/src/drum_smp.h`, 8.5 KB for the two.
 
 ### HEAVY, the default 808
 
@@ -62,43 +107,8 @@ is a shaping curve built from the reference's first 16 harmonics. At full DRIVE 
 tone within half a dB on the first eight harmonics: the third harmonic 10 dB over the fundamental, the second and
 fourth near it. Lower DRIVE uses less of the curve, for a rounder sub. During the punch the curve swells in as the
 pitch falls two octaves, as the reference does in its first 70 ms. With DECAY at 127 the note holds for 1.8 s, then
-falls about 14 dB a second like the reference one-shot, whether or not the key is still down. In a rhythm's 808 line
-the root sits in the 808's own octave, C1 to B1 (33 to 62 Hz), whatever octave the keys are in.
-
-### The 808 lines
-
-The 808 lines come from your MIDI files: Spinz 1-4, Forsaken, King, Bitcrush, OhMyGawd, LuhTwizz, Chase, Chichi,
-Quis, Bounce, Secret and SF RT, plus Rage's. Each keeps its own phrase length (2, 4 or 8 bars), its intervals, its
-slides and its rolls (the "spinz": up to 8 fading hits inside a 16th). Secret's triplets sit on the nearest 16ths.
-Each rhythm has its own line. **ALGORITHM** in the rhythm machine picks the line for every rhythm instead: Own (each
-rhythm's), any line, or None. The choice is kept with the rhythm machine's settings and named under the rhythm
-(`[ALGO] Spinz 2`). The rhythm view shows two bars at a time, the pair playing, with the line's own pair under them.
-
-| Rhythm | Its 808 line |
-| --- | --- |
-| Rage | Rage (one hit every two bars) |
-| Atlanta | Chase |
-| Carti | Bounce |
-| Opium | Spinz 2 |
-| Plugg | Bitcrush |
-| Memphis | Quis |
-| TrapDrill | Spinz 4 |
-| Rolls | Spinz 3 |
-| GTR | Chichi |
-| Moet | LuhTwizz |
-
-**GTR** (~140 BPM) and **Moet** (~98 BPM) are your two drum loops, transcribed to 4 bars. GTR has a half-time snare
-and clap and 8th hats with 32nd-note rolls. Moet has its kick on syncopated 16ths, the snare on 3 with pickups, and
-16th hats.
-
-### How the 808 line plays
-
-A rhythm with an 808 line plays the bass part while it runs. Each hit strikes the note the keys' bass would play (the
-last chord's; kept while no key is down), plus the step's interval (octaves, fifths and sevenths in the factory lines).
-A slide step glides into its note from the one sounding, without a new attack. The chords no longer strike the bass
-themselves. When the rhythm stops, or another one without an 808 line comes in, the keys' bass comes back. The line
-plays whatever the bass sound is; the 808s are made for it. A rhythm made into a pattern keeps its drums. The 808 line
-and the rolls stay in the rhythm machine: a pattern's BASS track is written as in CoralFlower.
+falls about 14 dB a second like the reference one-shot, whether or not the key is still down. The bass part starts at
+0 dB (CoralFlower's is -8 dB), so the 808 sits up front, just under the output limiter.
 
 With an 808 on the bass part, the part is one voice (legato, so it slides). The octaver is off under it.
 
@@ -161,8 +171,9 @@ sky, moon, clouds and fire are drawn in code. It is about 3 KB smaller than the 
 
 - The 808 engine in engine slot 11 (NOISE's retired slot): `FELUCCA_808`.
 - The bass list starts with the 808s; a new unit starts on RAGE SAW chords over the CARSON 808, the LAYER on KEN LEAD.
-- The rhythm machine lists the trap rhythms first. PLAY on HOME plays a rhythm on a new unit, and SEQ twice opens the
-  rhythm machine.
+- The rhythm machine holds Rage and the owner's 808 patterns only (CoralFlower's rhythms are out). Picking one sets the
+  tempo. PLAY on HOME plays a rhythm on a new unit, and SEQ twice opens the rhythm machine.
+- The X Rage kit plays the owner's snare samples on its snare and clap (eng_drum.c can play a sample on a lane).
 - The tempo starts at 180 BPM (Rage's). The interface colour starts on **Blood** (CoralFlower's Coral ramp, renamed).
 - The sequencer's marks are trap marks instead of flowers: a chord an ice diamond, a bass note a drop, a drum a flame,
   the layer a star, on wine-red stems.

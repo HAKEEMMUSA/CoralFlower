@@ -134,6 +134,13 @@ static const sq_kit_t SQ_KITS[] = {
     {"X Rage", {0, 64, 64, 64, 64, 100, 0, 0}, 7},   /* (TrapRoot: drum_kits.c's X Rage) */
 };
 #define SQ_NKIT ((uint32_t)(sizeof SQ_KITS / sizeof SQ_KITS[0]))
+/* TrapRoot: the drums a kit plays from the owner's samples (eng_drum.c drum_smp.h; sample + 1, 0: its own drum): X Rage
+ * strikes its snare with Metro 2 and its clap with Mafia (the owner's snares, 2026-10-30; Rage's bounce on the snare,
+ * its backbeat on the clap) */
+static uint32_t sq_kit_smp(uint32_t k, uint32_t l)
+{
+    return k == 14u ? (l == 1u ? 1u : l == 2u ? 2u : 0u) : 0u;
+}
 /* the order the kits are picked in, on every knob that picks one (the owner, 2026-10-29: "сначала с x идут киты
  * новые, потом старые. Первым должен идти x lofi. Везде и в секвенсоре тоже"): the X kits, X Lo-Fi first, then the
  * eight before them. Only the order the knob walks: a pattern keeps its kit's number, as stored since 0.3 */
