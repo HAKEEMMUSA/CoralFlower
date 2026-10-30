@@ -161,7 +161,7 @@ static const ds_kit_t DS_KITS[] = {
         DS(DSW_SINE, DSN_RING, DSF_BP, 0, 0, 0, 1270, 0, 0, 0, 0, 0, 0, 100, 10, 115, 120, 38, 12, 40, 30, 96),
      },
      48, 55, 2, 12, 15, 88},
-    {"X Rage",                                  /* TrapRoot: trap and rage: a short punchy kick over the 808, a high cracking
+    {"X Rage",                                  /* Leviathan: trap and rage: a short punchy kick over the 808, a high cracking
                                                  * snare, a wide clap, tight bright hats for the rolls (X Club's voices,
                                                  * retuned; by numbers, not yet by the owner's ear) */
      {

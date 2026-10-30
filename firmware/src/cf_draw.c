@@ -72,7 +72,7 @@ static void draw_topbar(const char *left, const char *mid)
  * sounding root) */
 static uint8_t cf_panel(int what)
 {
-    return (uint8_t)((flora_fall(&flo) > 36000 ? FL_S0 : FL_L0) + what);   /* (TrapRoot: the night's, then the fire's
+    return (uint8_t)((flora_fall(&flo) > 36000 ? FL_S0 : FL_L0) + what);   /* (Leviathan: the night's, then the fire's
                                                   * once she has fallen) */
 }
 

@@ -56,7 +56,7 @@ static void cf_boot_note(void);            /* (cf_fx.c) */
 #define FELUCCA_TRIO 0
 #define FELUCCA_NOISE 0
 #ifndef FELUCCA_808
-#define FELUCCA_808 1             /* TrapRoot: the 808 engine in NOISE's slot (eng_808.c) */
+#define FELUCCA_808 1             /* Leviathan: the 808 engine in NOISE's slot (eng_808.c) */
 #endif
 #define FELUCCA_PHYS 0
 #define FELUCCA_SEQ 0
@@ -88,7 +88,7 @@ static void cf_boot_note(void);            /* (cf_fx.c) */
 #define FELUCCA_ID "FM-1_930"    /* package identity (build.py: the .fwsc marker string) */
 #endif
 #ifndef FELUCCA_VERSION
-#define FELUCCA_VERSION "TrapRoot 0.1"
+#define FELUCCA_VERSION "Leviathan 0.1"
 #endif
 #if FELUCCA_OTA && !FELUCCA_FLASH
 #error "FELUCCA_OTA needs FELUCCA_FLASH"
@@ -170,7 +170,7 @@ static void mix_block(int32_t *out, uint32_t n)
 #endif
 #include "cr_bank.c"             /* upreset.c (32 user sounds, fm6_bank.c), the pools per engine */
 #include "flora/flora_canvas.c"
-#include "flora/angel.c"   /* (TrapRoot: the fallen angel in the plant's place, flora.c's calls) */
+#include "flora/angel.c"   /* (Leviathan: the fallen angel in the plant's place, flora.c's calls) */
 #define CF_PUMP() cf_ui_pump()
 static void cf_ui_pump(void);
 #include "cf_fb.c"

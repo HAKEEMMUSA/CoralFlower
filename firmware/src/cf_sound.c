@@ -20,7 +20,7 @@ static uint8_t cf_snd_gen[3];                    /* each part's sound loads and 
 
 static const uint8_t CF_ENGINES[] = {
 #if FELUCCA_808
-                                     ENGI_808,   /* TrapRoot: the 808s first in the bass list */
+                                     ENGI_808,   /* Leviathan: the 808s first in the bass list */
 #endif
                                      ENGI_FM6,
 #if FELUCCA_VA
@@ -78,7 +78,7 @@ static int cf_named(const cf_named_t *t, uint32_t n, uint32_t e, const char *nam
 static int cf_fac_part(uint32_t e, uint32_t f)   /* factory preset f of engine e */
 {
 #if FELUCCA_808
-    if (e == ENGI_808)                           /* (TrapRoot: every 808 is a bass) */
+    if (e == ENGI_808)                           /* (Leviathan: every 808 is a bass) */
         return 1;
 #endif
     const char *nm = ENGINES[e % NENGINES]->presets[f].name;
@@ -173,7 +173,7 @@ static void cf_part_voice(track_t *t, uint32_t part)
         t->p[P_GLIDE] = 0;                       /* (the chord sound's is HOME's GLIDE: cf_play.c cfp_glide_g) */
 #if FELUCCA_808
     if (part == CF_PART_BASS && t->eng_req == ENGI_808)
-        t->p[P_VOICE] = V_LEGATO;                /* (TrapRoot: the 808 is one voice that slides, eng_808.c GLIDE; no
+        t->p[P_VOICE] = V_LEGATO;                /* (Leviathan: the 808 is one voice that slides, eng_808.c GLIDE; no
                                                   * octaver note under it) */
 #endif
 }

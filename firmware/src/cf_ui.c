@@ -48,6 +48,7 @@ static void cf_send_config(void)                 /* the chord settings -> the au
     cfp_cfg.in_ch = (uint8_t)(cs.in_ch > CF_INCH_ALL ? cs.in_ch - CF_INCH_ALL : 0u);
     cfp_cfg.arp_on = sq_keys_arp();              /* (a track open: the keys play as it plays, its own ARP) */
     cfp_cfg.arp = cs.arp;
+    cfp_cfg.mel = cs_mel;                        /* (Leviathan: the melody engine's) */
     cfp_cfg.bpm = cs.bpm;
     cfp_cfg.clock_in = cs.clock_in == 1u;
     cfp_cfg.clock_out = cs.clock_in == 2u;
@@ -75,9 +76,21 @@ static int wrapi(int v, int n) { return ((v % n) + n) % n; }
 
 /* the arpeggiator's names: a knob cell's (7 characters at most), the screen's title */
 static const char *const CF_ARP_SHORT[CF_ARP_NMODES] = {"Up", "Down", "Incl", "Excl", "Random", "Order", "Repeat",
-                                                        "Strum\x84", "Strum\x85"};
+                                                        "Strum\x84", "Strum\x85", "Melody"};
 static const char *const CF_ARP_NAME[CF_ARP_NMODES] = {"Up", "Down", "Inclusive", "Exclusive", "Random", "Order",
-                                                       "Repeat", "Strum up", "Strum down"};
+                                                       "Repeat", "Strum up", "Strum down", "Melody"};
+/* Leviathan: the melody engine's pages and names (cf_mel.c) */
+#define CF_MEL_NPG 6u
+static const char *const CF_MEL_PG[CF_MEL_NPG] = {"Pattern", "Pitch", "Phrase", "Voice", "LFOs", "Matrix"};
+static const char *const CF_MEL_RHY[ML_NR] = {"Euclid", "Bounce", "Drive", "Sync", "Rage", "Random"};
+static const char *const CF_MEL_CON[ML_NC] = {"Sine", "Tri", "Rise", "Fall", "Square", "Steps", "Walk", "Arp"};
+static const char *const CF_MEL_RATE[6] = {"1/2", "1", "2", "3", "4", "8"};
+static const char *const CF_MEL_LW[ML_NW] = {"Sine", "Tri", "Saw", "Square", "S&H"};
+static const char *const CF_MEL_LR[6] = {"1/4 bar", "1/2 bar", "1 bar", "2 bars", "4 bars", "8 bars"};
+static const char *const CF_MEL_SRC[ML_NS] = {"Off", "LFO 1", "LFO 2", "Ramp", "Chord", "Random", "Beat", "Height"};
+static const char *const CF_MEL_DST[ML_ND] = {"Off", "Density", "Pitch", "Range", "Octave", "Gate", "Velo", "Slide",
+                                              "Tones", "Rotate", "Rate"};
+static int cf_mel_mode(void) { return cs.arp.mode == CF_ARP_MELODY; }
 static const char *const CF_ARP_RATE[CF_ARP_NRATES] = {"1/1", "1/2", "1/4", "1/4T", "1/8", "1/8T", "1/16", "1/16T",
                                                        "1/32"};
 
@@ -274,6 +287,45 @@ static void ui_knob_info(int k, cf_knob_t *o)
         break;
     }
     case SCR_ARP:
+        if (cf_mel_mode()) {                     /* Leviathan: Melody's pages (CF_MEL_PG) */
+            cf_mel_t *M = &cs_mel;
+            uint32_t pg = cu.page[SCR_ARP] % CF_MEL_NPG, sl = M->slot % ML_NMOD;
+            static const char *const NM[CF_MEL_NPG][4] = {{"ON/OFF", "MODE", "RHYTHM", "DENSITY"},
+                {"CONTOUR", "RATE", "RANGE", "TONES"}, {"BARS", "VARY", "GATE", "SEED"},
+                {"OCTAVE", "SLIDE", "ACCENT", "TEMPO"}, {"LFO 1", "RATE 1", "LFO 2", "RATE 2"},
+                {"SLOT", "SOURCE", "DEST", "AMOUNT"}};
+            kfmt(o->name, 12, NM[pg][k & 3]);
+            switch (pg * 4u + (uint32_t)(k & 3)) {
+            case 0: kfmt(o->val, 14, cu.arp_on ? "On" : "Off"); break;
+            case 1: kfmt(o->val, 14, CF_ARP_SHORT[CF_ARP_MELODY]); break;
+            case 2: kfmt(o->val, 14, CF_MEL_RHY[M->rhythm % ML_NR]); break;
+            case 3: kint(o->val, M->density, "%"); o->bar = (int16_t)(M->density * 255 / 100); break;
+            case 4: kfmt(o->val, 14, CF_MEL_CON[M->contour % ML_NC]); break;
+            case 5: kfmt(o->val, 14, CF_MEL_RATE[M->rate % 6u]); break;
+            case 6: kint(o->val, M->range, " st"); o->bar = (int16_t)((M->range - 5) * 255 / 31); break;
+            case 7: kint(o->val, M->tones, "%"); o->bar = (int16_t)(M->tones * 255 / 100); break;
+            case 8: kint(o->val, M->bars, M->bars > 1 ? " bars" : " bar"); break;
+            case 9: kint(o->val, M->vary, "%"); o->bar = (int16_t)(M->vary * 255 / 100); break;
+            case 10: kint(o->val, M->gate, "%"); o->bar = (int16_t)(M->gate * 255 / 100); break;
+            case 11: kint(o->val, M->seed + 1, 0); break;
+            case 12: kint(o->val, M->oct, 0); break;
+            case 13: kint(o->val, M->slide, "%"); o->bar = (int16_t)(M->slide * 255 / 100); break;
+            case 14: kint(o->val, M->accent, 0); o->bar = (int16_t)(M->accent * 255 / 60); break;
+            case 15: kint(o->val, cs.bpm, 0); o->dis = cf_sn.ext_clock; break;   /* (MIDI clock in: the clock's) */
+            case 16: kfmt(o->val, 14, CF_MEL_LW[M->lfo_w[0] % ML_NW]); break;
+            case 17: kfmt(o->val, 14, CF_MEL_LR[M->lfo_r[0] % 6u]); break;
+            case 18: kfmt(o->val, 14, CF_MEL_LW[M->lfo_w[1] % ML_NW]); break;
+            case 19: kfmt(o->val, 14, CF_MEL_LR[M->lfo_r[1] % 6u]); break;
+            case 20: kint(o->val, (int)sl + 1, 0); break;
+            case 21: kfmt(o->val, 14, CF_MEL_SRC[M->src[sl] % ML_NS]); break;
+            case 22: kfmt(o->val, 14, CF_MEL_DST[M->dst[sl] % ML_ND]); break;
+            default:
+                kint(o->val, M->amt[sl], 0);
+                o->bar = (int16_t)((M->amt[sl] + 100) * 255 / 200);
+                break;
+            }
+            break;
+        }
         if (cu.page[SCR_ARP] == 0) {             /* Pattern: ON/OFF MODE OCTAVE RATE */
             switch (k) {
             case 0: kfmt(o->name, 12, "ON/OFF"); kfmt(o->val, 14, cu.arp_on ? "On" : "Off"); break;
@@ -501,11 +553,55 @@ static void ui_knob_turn(int k, int d)
         break;
     }
     case SCR_ARP:
+        if (cf_mel_mode()) {                     /* Leviathan: Melody's pages */
+            cf_mel_t *M = &cs_mel;
+            uint32_t pg = cu.page[SCR_ARP] % CF_MEL_NPG, sl = M->slot % ML_NMOD;
+            switch (pg * 4u + (uint32_t)(k & 3)) {
+            case 0: cu.arp_on = (uint8_t)(d > 0); break;
+            case 1:                              /* (MODE: out of Melody, its pages go) */
+                cs.arp.mode = (uint8_t)clampi(cs.arp.mode + d, 0, CF_ARP_NMODES - 1);
+                if (!cf_mel_mode())
+                    cu.page[SCR_ARP] = 0;
+                break;
+            case 2: M->rhythm = (uint8_t)wrapi(M->rhythm + d, ML_NR); break;
+            case 3: M->density = (uint8_t)clampi(M->density + d * 5, 0, 100); break;
+            case 4: M->contour = (uint8_t)wrapi(M->contour + d, ML_NC); break;
+            case 5: M->rate = (uint8_t)clampi(M->rate + d, 0, 5); break;
+            case 6: M->range = (uint8_t)clampi(M->range + d, 5, 36); break;
+            case 7: M->tones = (uint8_t)clampi(M->tones + d * 5, 0, 100); break;
+            case 8: M->bars = (uint8_t)(d > 0 ? (M->bars >= 2 ? 4 : 2) : (M->bars <= 2 ? 1 : 2)); break;
+            case 9: M->vary = (uint8_t)clampi(M->vary + d * 5, 0, 100); break;
+            case 10: M->gate = (uint8_t)clampi(M->gate + d * 5, 10, 100); break;
+            case 11: M->seed = (uint8_t)(M->seed + d); break;   /* (another phrase: a new roll) */
+            case 12: M->oct = (int8_t)clampi(M->oct + d, -2, 2); break;
+            case 13: M->slide = (uint8_t)clampi(M->slide + d * 5, 0, 100); break;
+            case 14: M->accent = (uint8_t)clampi(M->accent + d * 2, 0, 60); break;
+            case 15:
+                if (!cf_sn.ext_clock) {
+                    cs.bpm = (uint16_t)clampi(cs.bpm + d, 30, 300);
+                    cf_send_metro();
+                }
+                break;
+            case 16: M->lfo_w[0] = (uint8_t)wrapi(M->lfo_w[0] + d, ML_NW); break;
+            case 17: M->lfo_r[0] = (uint8_t)clampi(M->lfo_r[0] + d, 0, 5); break;
+            case 18: M->lfo_w[1] = (uint8_t)wrapi(M->lfo_w[1] + d, ML_NW); break;
+            case 19: M->lfo_r[1] = (uint8_t)clampi(M->lfo_r[1] + d, 0, 5); break;
+            case 20: M->slot = (uint8_t)wrapi((int)sl + d, ML_NMOD); break;
+            case 21: M->src[sl] = (uint8_t)wrapi(M->src[sl] + d, ML_NS); break;
+            case 22: M->dst[sl] = (uint8_t)wrapi(M->dst[sl] + d, ML_ND); break;
+            default: M->amt[sl] = (int8_t)clampi(M->amt[sl] + d * 5, -100, 100); break;
+            }
+            cf_send_config();
+            break;
+        }
         if (cu.page[SCR_ARP] == 0) {
             if (k == 0)
                 cu.arp_on = (uint8_t)(d > 0);
-            else if (k == 1)
+            else if (k == 1) {
                 cs.arp.mode = (uint8_t)clampi(cs.arp.mode + d, 0, CF_ARP_NMODES - 1);
+                if (cf_mel_mode())               /* (into Melody: its first page) */
+                    cu.page[SCR_ARP] = 0;
+            }
             else if (k == 2)
                 cs.arp.oct = (uint8_t)clampi(cs.arp.oct + d, 1, 4);
             else if (CF_ARP_STRUMMING(cs.arp.mode))
@@ -630,7 +726,7 @@ static uint32_t screen_pages(uint32_t scr)
     if (scr == SCR_ENV)
         return 3u;                               /* chord + bass, chord, bass */
     if (scr == SCR_ARP)
-        return 2u;                               /* Pattern, Feel */
+        return cf_mel_mode() ? CF_MEL_NPG : 2u;  /* Pattern, Feel; Melody: CF_MEL_PG */
     if (scr == SCR_SAVE)
         return CF_SAVE_NPG;                      /* the chord's sound, the bass's, the LAYER's (a pattern's copy: OCT+
                                                   * held on the SEQUENCER, cf_sequi.c) */
@@ -719,6 +815,13 @@ static void ui_select(int d)                     /* SELECT: the bass sound, or a
 }
 static void ui_presets(int d)                    /* PRESETS: the chord sound (a sequencer's track open: its sound) */
 {
+    if (cu.scr == SCR_ARP && cf_mel_mode()) {    /* (Leviathan: on Melody's page, the melody's sound, the LAYER's) */
+        cf_snd_step(CF_PART_LAYER, d);
+        cs.snd_layer = (uint16_t)cf_snd_pos(CF_PART_LAYER);
+        ui_snd_heard(CF_PART_LAYER);
+        cf_pop(POP_SOUND_LAYER, 1200);
+        return;
+    }
     if (dm_holding()) {                          /* (EDIT held in DRUMS: a rhythm for them, cf_dmui.c) */
         dm_hold_turn(d);
         return;
@@ -784,7 +887,7 @@ static void ui_open(uint32_t scr)
         ui_ctx_from_track(squ.trk);
     cu.scr = (uint8_t)(scr == was && scr != SCR_HOME ? SCR_HOME : scr);
     if (cu.scr == SCR_SEQ && was != SCR_SEQ)
-        dm_seq_to = 1;                           /* (TrapRoot: the carousel starts on the drum machine: SEQ twice opens it) */
+        dm_seq_to = 1;                           /* (Leviathan: the carousel starts on the drum machine: SEQ twice opens it) */
     if (cu.scr == SCR_SEL && cf_is_off(&cs.chord, cu.sel_btn))
         cu.sel_btn = sel_first();
     if ((was == SCR_SEQ || sq_screen(was)) != (cu.scr == SCR_SEQ || sq_screen(cu.scr)))
@@ -1751,7 +1854,7 @@ static void cf_feed_plant(uint32_t dt)
             lvl = (uint32_t)e;
     }
     flora_set_level(&flo, (uint16_t)(lvl > 32767u ? 65535u : lvl * 2u));
-    /* TrapRoot: she falls while the song plays (a rhythm, a pattern, the song); the 808 (the bass part's attack) and
+    /* Leviathan: she falls while the song plays (a rhythm, a pattern, the song); the 808 (the bass part's attack) and
      * the kick jolt her and her fire */
     flora_set_playing(&flo, cf_sn.dm_on || cf_sn.sq_on);
     {
@@ -1811,7 +1914,7 @@ static void cf_ui_init(void)
     if (cfs_loaded) {                            /* the sounds the parts had before the power-off */
         cf_snd_load_index(CF_PART_CHORD, cs.snd[0]);
         cf_snd_load_index(CF_PART_BASS, cs.snd[1]);
-    } else {                                     /* a new unit (TrapRoot): RAGE SAW chords over the CARSON 808 */
+    } else {                                     /* a new unit (Leviathan): RAGE SAW chords over the CARSON 808 */
 #if FELUCCA_VA
         if (!cf_snd_find(CF_PART_CHORD, ENGI_VA, "RAGE SAW"))
 #endif
@@ -1830,7 +1933,8 @@ static void cf_ui_init(void)
     if (cs.snd_layer != 0xFFFFu)                 /* the LAYER's sound; a new unit's: a soft lead, else the second sound */
         cf_snd_load_index(CF_PART_LAYER, cs.snd_layer);
 #if FELUCCA_VA
-    else if (!cf_snd_find(CF_PART_LAYER, ENGI_VA, "KEN LEAD") && !cf_snd_find(CF_PART_LAYER, ENGI_VA, "SOFT LEAD"))
+    else if (!cf_snd_find(CF_PART_LAYER, ENGI_VA, "LEVIATHAN") && !cf_snd_find(CF_PART_LAYER, ENGI_VA, "KEN LEAD") &&
+             !cf_snd_find(CF_PART_LAYER, ENGI_VA, "SOFT LEAD"))   /* (Leviathan: the melody's lead) */
 #else
     else
 #endif

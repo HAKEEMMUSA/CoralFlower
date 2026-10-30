@@ -94,6 +94,7 @@ typedef struct {
 #define CF_INCH_ALL 1u         /* cs.in_ch: every channel; 2..17 channels 1..16 */
 
 static cf_set_t cs;
+static cf_mel_t cs_mel = CF_MEL_DEFAULT;          /* Leviathan: the melody engine's settings (kept by cf_dmui.c) */
 
 static void cs_defaults(cf_set_t *s)
 {
@@ -104,11 +105,11 @@ static void cs_defaults(cf_set_t *s)
     s->bass_on = 1;
     s->octaver = 0;
     s->bass_oct = 0;
-    s->bass_level = 112;                         /* (TrapRoot: 0 dB, the 808 up front, just under the limiter; CoralFlower's 96, -8 dB) */
+    s->bass_level = 112;                         /* (Leviathan: 0 dB, the 808 up front, just under the limiter; CoralFlower's 96, -8 dB) */
     s->metro_level = 0;
     s->beats = 4;
-    s->bpm = 180;                                 /* (TrapRoot: Rage's tempo, the first rhythm PLAY plays) */
-    s->accent = 0;                   /* Blood (TrapRoot; CoralFlower: 3, Lime) */
+    s->bpm = 180;                                 /* (Leviathan: Rage's tempo, the first rhythm PLAY plays) */
+    s->accent = 0;                   /* Blood (Leviathan; CoralFlower: 3, Lime) */
     s->env_link = 1;
     s->midi_out = 1;
     s->ch_chord = 0;

@@ -76,7 +76,7 @@
 #define FELUCCA_NOISE 1          /* the NOISE engine (eng_noise.c), engine 11; ChoralRoot: 0, engine 11 retired */
 #endif
 #ifndef FELUCCA_808
-#define FELUCCA_808 0            /* TrapRoot's 808 engine (eng_808.c, docs/TRAP.md): engine 11, NOISE's slot (so not with
+#define FELUCCA_808 0            /* Leviathan's 808 engine (eng_808.c, docs/LEVIATHAN.md): engine 11, NOISE's slot (so not with
                                   * FELUCCA_NOISE); coralflower.c and the emulator set 1 */
 #endif
 #if FELUCCA_808 && FELUCCA_NOISE

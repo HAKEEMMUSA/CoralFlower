@@ -59,7 +59,7 @@ static const uint32_t fl_pal_rgb[FL_PAL_SIZE] = {
  * Palette entries 56..63 (48..55 are the UI theme's accent and secondary ramps). */
 enum { FL_L0 = 56, FL_L1, FL_L2, FL_L3, FL_S0, FL_S1, FL_S2, FL_S3 };
 static const uint32_t fl_back_rgb[8] = {
-    0x0E1024, 0x1A1D3C, 0x2E3360, 0x56608E,   /* TrapRoot: the calm night: navy -> indigo -> the moonlit haze */
+    0x0E1024, 0x1A1D3C, 0x2E3360, 0x56608E,   /* Leviathan: the calm night: navy -> indigo -> the moonlit haze */
     0x170507, 0x380A0D, 0x6A1410, 0xB2381A,   /* .. the burning sky: black-red -> crimson -> the fire's glow */
 };
 

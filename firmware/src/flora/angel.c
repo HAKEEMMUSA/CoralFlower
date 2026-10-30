@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only
- * TrapRoot: the fallen angel (angel.h). Replaces flora.c in the unit (coralflower.c, the emulator), on the same
+ * Leviathan: the fallen angel (angel.h). Replaces flora.c in the unit (coralflower.c, the emulator), on the same
  * canvas primitives (flora_canvas.c) and palette (flora_pal.h). */
 #include "angel.h"
 #include "flora_lut.h"

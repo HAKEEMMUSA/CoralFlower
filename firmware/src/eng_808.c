@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 ChoralRoot FM-1 contributors (a fork of Felucca) */
-/* 808: the trap bass (TrapRoot, docs/TRAP.md). Engine 11, the slot NOISE held until 0.18 (FELUCCA_808; with
+/* 808: the trap bass (Leviathan, docs/LEVIATHAN.md). Engine 11, the slot NOISE held until 0.18 (FELUCCA_808; with
  * FELUCCA_NOISE the slot is NOISE's and this file is not built).
  *
  * One voice is the classic tuned kick-bass: a sine whose pitch drops from PUNCH semitones above the note to the note
@@ -30,11 +30,11 @@
 
 enum { E8_CLEAN, E8_WARM, E8_HARD, E8_GROWL, E8_FOLD, E8_RAGE, E8_HEAVY, E8_NMODEL };   /* (append only: stored) */
 static const char *const N_E8_MODEL[E8_NMODEL] = {"CLEAN", "WARM", "HARD", "GROWL", "FOLD", "RAGE", "HEAVY"};
-/* output trim per model (Q12): the models level with WARM at DRIVE 70 by RMS (measured by TrapRoot's ChoralRoot-based tests);
+/* output trim per model (Q12): the models level with WARM at DRIVE 70 by RMS (measured by Leviathan's ChoralRoot-based tests);
  * CLEAN's falls with DRIVE (a sine at 0, nearly a square at the knee) */
 static const uint16_t E8_COMP[E8_NMODEL] = {4096, 3700, 4140, 3800, 5570, 4240, 4096};
 
-/* HEAVY: a shaping curve made from the owner's reference 808 (a heavy, saturated C1 808, TrapRoot 2026-10-30): its
+/* HEAVY: a shaping curve made from the owner's reference 808 (a heavy, saturated C1 808, Leviathan 2026-10-30): its
  * steady tone's first 16 harmonics measured (levels, and their signs against the fundamental's phase), then summed as
  * Chebyshev polynomials, sum a_n T_n(x), so a full-scale sine through the curve gives exactly those levels: the third
  * harmonic 10 dB over the fundamental, the second and fourth near it, the rest falling to -35 dB by the 16th. DRIVE

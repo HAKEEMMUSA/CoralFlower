@@ -23,7 +23,7 @@ static int cfe_va(uint32_t part) { return trk[part].eng_req == ENGI_VA; }
 static int cfe_va(uint32_t part) { (void)part; return 0; }
 #endif
 #if FELUCCA_808
-static int cfe_808(uint32_t part) { return trk[part].eng_req == ENGI_808; }   /* (TrapRoot: its 8 macros, 2 pages) */
+static int cfe_808(uint32_t part) { return trk[part].eng_req == ENGI_808; }   /* (Leviathan: its 8 macros, 2 pages) */
 #else
 static int cfe_808(uint32_t part) { (void)part; return 0; }
 #endif

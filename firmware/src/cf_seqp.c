@@ -276,7 +276,7 @@ static void sqp_lane_kit(uint32_t l, uint32_t k, uint32_t lvl)   /* lvl: its lev
     for (i = 0; i < 8u; i++)
         drum_lane_knobs[0][el][i] = (int16_t)SQ_KITS[k % SQ_NKIT].e[i];
     drum_lane_knobs[0][el][8] = SQ_KITS[k % SQ_NKIT].ds;   /* (a kit of the second engine: drum_synth.c) */
-    drum_lane_smp[0][el] = sq_kit_smp(k % SQ_NKIT, l % SQ_NLANE);   /* (TrapRoot: or one of the owner's samples) */
+    drum_lane_smp[0][el] = sq_kit_smp(k % SQ_NKIT, l % SQ_NLANE);   /* (Leviathan: or one of the owner's samples) */
     drum_lane_att[0][el] = (uint8_t)(100u - (lvl < 100u ? lvl : 100u));
 }
 

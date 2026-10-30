@@ -657,6 +657,9 @@ typedef struct {
     uint32_t keys_held;          /* bit k: key k is down in the chord model's view */
     uint8_t arp_on, arp_latched, arp_steps, arp_note, arp_n, arp_note_list[CF_MAX_NOTES];
     uint32_t arp_idx;            /* the arpeggiator: steps played, the last note, the chord it plays */
+    uint8_t mel_n, mel_note[CF_MAX_NOTES], mel_root, mel_steps, mel_last, mel_latched;   /* Leviathan: the melody's
+                                                  * chord, notes played, the last, its step */
+    uint32_t mel_k;
     uint8_t ext_clock;           /* MIDI clock in runs the beat */
     uint16_t ext_bpm;            /* .. at this tempo */
     uint8_t sq_on, sq_song, sq_pat, sq_slot, sq_bar;   /* the sequencer: playing, the song, where (bar: in the
@@ -673,7 +676,7 @@ typedef struct {
     uint8_t sq_dn, sq_dnote[6], sq_droot, sq_dsingle, sq_dser, sq_bn, sq_bass[2];   /* .. the CHORDS track's chord
                                   * for HOME (cf_seqp.c sqp.dn ..), the bass sounding */
     uint16_t sq_dmask;
-    uint32_t dm_nbar;            /* (TrapRoot: the rhythm's bars since it began: where its 808 line is) */
+    uint32_t dm_nbar;            /* (Leviathan: the rhythm's bars since it began: where its 808 line is) */
     uint8_t dm_on, dm_r, dm_next, dm_bar, dm_rin;   /* the drum machine: a rhythm plays, which, the next, its bar;
                                   * REC in the SEQUENCER waits for its bar line (pattern + 1) */
     uint32_t dm_t, dm_left;      /* .. ticks into its bar; ticks till REC in's pattern takes over */
@@ -698,6 +701,14 @@ static void cf_snapshot(void)
     cf_sn.arp_note = cfa.last_note;
     cf_sn.arp_idx = cfa.idx;
     cf_sn.arp_n = cfa.n;
+    cf_sn.mel_n = mel.n;
+    for (i = 0; i < mel.n; i++)
+        cf_sn.mel_note[i] = mel.note[i];
+    cf_sn.mel_root = mel.root_pc;
+    cf_sn.mel_steps = mel.steps;
+    cf_sn.mel_last = mel.last;
+    cf_sn.mel_k = mel.shown_k;
+    cf_sn.mel_latched = mel.latched;
     cf_sn.ext_clock = cfx_in.active;
     cf_sn.ext_bpm = cfx_in.bpm;
     for (i = 0; i < cfa.n; i++)

@@ -27,7 +27,7 @@ static void sq_sprite(int x, int y, const char *const *row, int w, int h, sq_ink
             fb_pset(x + i, y + j, c);
         }
 }
-/* TrapRoot's marks (CoralFlower's were flowers): a chord an ice diamond, a bass note an 808 drop, a drum a flame, the
+/* Leviathan's marks (CoralFlower's were flowers): a chord an ice diamond, a bass note an 808 drop, a drum a flame, the
  * layer a star (the names kept: BLOOM chord, TULIP bass, DAISY drum, STAR layer) */
 static const char *const SQ_BLOOM7[7] = {".......", "..aaa..", ".abeba.", "abbbbba", ".bbbbb.", "..bcb..", "...c..."};
 static const char *const SQ_BLOOM5[5] = {".aaa.", "abeba", ".bbb.", "..c..", "....."};
@@ -76,7 +76,7 @@ static void sq_flower(int cx, int y, int w, int what, sq_ink_t k, int low)
     const char *const *spr = what == 3 ? (big ? SQ_STAR7 : SQ_STAR5) : what == 2 ? (big ? SQ_DAISY7 : SQ_DAISY5) :
                              what ? (big ? SQ_TULIP7 : SQ_TULIP5) :
                              (big ? SQ_BLOOM7 : SQ_BLOOM5);
-    sy = top + n;                                /* (TrapRoot's marks: none has its stem in it) */
+    sy = top + n;                                /* (Leviathan's marks: none has its stem in it) */
     if (gy > sy)
         fb_rect(cx, sy, 1, gy - sy, sq_shade(FL_R_ROSE, 1));
     if (!low && gy - sy >= 3) {                  /* a leaf on the stem */
@@ -323,7 +323,7 @@ static void sq_ev_name(const sq_pat_t *p, uint32_t i, char *b)
     cf_chord_name(sqv.root[i], sqv.mask[i], -1, &cu_spell, b);
 }
 
-/* TrapRoot: the DRUMS editor as ChoralRoot's step editor (the owner's pick of TrapRoot's first screens): the drum
+/* Leviathan: the DRUMS editor as ChoralRoot's step editor (the owner's pick of Leviathan's first screens): the drum
  * picked big in the middle, its neighbours either side, a dot for each drum; a grid of four drums by the bar's steps
  * (the picked one bright, the others dim; each drum its own colour, the beats' columns a shade lighter), the step
  * playing lit; under it the drum and the bar, the bars as tabs. The keys and knobs are CoralFlower's, as before */
@@ -452,10 +452,10 @@ static void draw_sq_track(void)
     } else {
         char d[24];
         fb_signs(c, d, sizeof d);
-        if (!drums || squ.ocpy || squ.cpy)       /* (TrapRoot: the DRUMS editor names its drum big, sq_drums13) */
+        if (!drums || squ.ocpy || squ.cpy)       /* (Leviathan: the DRUMS editor names its drum big, sq_drums13) */
             fb_text_r(&CF_FONT_UI, 232, Y_VIEW + 4, d, drums ? FL_C(sq_lane_ink(squ.lane).ramp, 0) : C_ACC(0), 1);
     }
-    if (drums && !squ.ocpy && !squ.cpy) {        /* (TrapRoot: the step editor's look; copying keeps the bars' view) */
+    if (drums && !squ.ocpy && !squ.cpy) {        /* (Leviathan: the step editor's look; copying keeps the bars' view) */
         static const char *const H[2] = {"GLO", "help"};
         sq_drums13(p);
         draw_hints(H, 1);

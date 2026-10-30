@@ -1,8 +1,9 @@
 # CoralFlower
 
-> **This tree is TrapRoot**: CoralFlower for trap, rage and plugg production, with an 808 engine, a rhythm machine of
+> **This tree is Leviathan**: CoralFlower for trap, rage and plugg production, with a melody engine on the ARP button
+> (a rhythm layer, a pitch layer, LFOs and a modulation matrix) and dual-layer leads, an 808 engine, a rhythm machine of
 > 808 patterns (Rage, then the owner's 808 MIDI files), the owner's snares as samples, rage leads, a step-grid DRUMS
-> editor and a fallen angel in the flower's place, who turns demonic as the song plays. See [docs/TRAP.md](docs/TRAP.md).
+> editor and a fallen angel in the flower's place, who turns demonic as the song plays. See [docs/LEVIATHAN.md](docs/LEVIATHAN.md).
 > Untested on hardware.
 
 **Your M-VAVE FM-1, made for chords.** CoralFlower is free firmware for the FM-1. Press a chord key, and every note

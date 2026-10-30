@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
-# TrapRoot: the browser emulator's wasm without Emscripten: clang's wasm32-wasi target and the WASI libc (Debian /
+# Leviathan: the browser emulator's wasm without Emscripten: clang's wasm32-wasi target and the WASI libc (Debian /
 # Ubuntu: apt install clang lld wasi-libc libclang-rt-18-dev-wasm32). The module has the same exports and the same
 # few WASI imports the worklet stubs; tools/emu/web/test_web_emu.mjs checks it as it checks emcc's (bit-exact with
 # the native headless runner). tools/emu/web/wasi/: a pthread.h and a sys/wait.h for the single-threaded build, and a

@@ -19,7 +19,8 @@
 /* what the drum machine keeps: an object of its own, the old looper's (storage.c OBJ_CFLOOP, a log as the settings':
  * a change written as what changed, no erase while anything sounds). 0.5 and older look there only for a loop of
  * theirs (cf_loop.c CFL_MAGIC): this record is passed over, a downgrade keeps everything else */
-#define DM_MAGIC 0x32444643u                     /* "CFD2" (rc4: kept by each rhythm's id) */
+#define DM_MAGIC 0x33444643u                     /* "CFD3" (Leviathan: and the melody engine's settings) */
+#define DM_MAGIC2 0x32444643u                    /* "CFD2" (rc4: kept by each rhythm's id; read in, its melody the default) */
 #define DM_MAGIC1 0x31444643u                    /* "CFD1": rc3's, kept by the place in its list (read in: dm_from1) */
 #define DM_NMAX 64u                              /* rhythm ids 0 .. 63 */
 typedef struct {
@@ -28,14 +29,20 @@ typedef struct {
     uint8_t pos[8];                              /* the rhythm stood on for each TIME SIG (cs.beats): its id, 0xFF none */
     uint8_t last;                                /* 1: a rhythm was chosen last (PLAY on HOME plays it) */
     uint8_t rsv[3];
+    cf_mel_t mel;                                /* Leviathan: the melody engine's settings (cs_mel; cf_mel.c) */
     uint32_t check;                              /* FNV-1a over what comes before */
 } dm_rec_t;
+typedef struct {                                 /* rc4's .. Leviathan's: the same without the melody */
+    uint32_t magic;
+    uint8_t kit[DM_NMAX], swing[DM_NMAX], pos[8], last, rsv[3];
+    uint32_t check;
+} dm_rec2_t;
 typedef struct {                                 /* rc3's (0.6-rc3 only, a test build) */
     uint32_t magic;
     uint8_t kit[32], swing[32], pos[8], last, rsv[3];
     uint32_t check;
 } dm_rec1_t;
-typedef char dm_fits[sizeof(dm_rec_t) <= 224u && sizeof(dm_rec1_t) == 84u ? 1 : -1];
+typedef char dm_fits[sizeof(dm_rec_t) <= 224u && sizeof(dm_rec1_t) == 84u && sizeof(dm_rec2_t) == 148u ? 1 : -1];
 static dm_rec_t dmr;
 static uint32_t dm_saved, dm_seen, dm_changed_ms, dm_retry_ms;
 static uint8_t dm_tidy, dm_store;
@@ -50,7 +57,12 @@ static void dm_defaults(void)
     memset(dmr.swing, 0xFF, sizeof dmr.swing);
     memset(dmr.pos, 0xFF, sizeof dmr.pos);
     dmr.magic = DM_MAGIC;
-    dmr.last = 1;                                /* (TrapRoot: PLAY on HOME plays a rhythm, the first: Rage) */
+    {
+        static const cf_mel_t D = CF_MEL_DEFAULT;
+        dmr.mel = D;
+        cs_mel = D;
+    }
+    dmr.last = 1;                                /* (Leviathan: PLAY on HOME plays a rhythm, the first: Rage) */
 }
 /* rc3's record: its rhythms had the ids 0 .. 28 in its list's order (cf_drum.c kept them), so its tweaks are by id
  * already; the rhythm stood on was a place in a TIME SIG's list: 4/4's 0 .. 19, then two each in 3/4, 2/4, 5/4, 6/8
@@ -73,6 +85,7 @@ static void dm_load(void)
 {
     static dm_rec_t r;
     static dm_rec1_t r1;
+    static dm_rec2_t r2;
     st_hdr_t h;
     uint32_t i, m = 0;
     dm_defaults();
@@ -92,6 +105,13 @@ static void dm_load(void)
     if (st_load(OBJ_CFLOOP, &r, sizeof r) == (int)sizeof r && r.magic == DM_MAGIC &&
         r.check == cfs_fnv(&r, (uint32_t)__builtin_offsetof(dm_rec_t, check))) {
         dmr = r;
+    } else if (st_load(OBJ_CFLOOP, &r2, sizeof r2) == (int)sizeof r2 && r2.magic == DM_MAGIC2 &&
+               r2.check == cfs_fnv(&r2, (uint32_t)__builtin_offsetof(dm_rec2_t, check))) {
+        r.magic = 0;                             /* (an older build's: its rhythms' settings, the melody's default) */
+        memcpy(dmr.kit, r2.kit, sizeof dmr.kit);
+        memcpy(dmr.swing, r2.swing, sizeof dmr.swing);
+        memcpy(dmr.pos, r2.pos, sizeof dmr.pos);
+        dmr.last = r2.last;
     } else if (st_load(OBJ_CFLOOP, &r1, sizeof r1) == (int)sizeof r1 && r1.magic == DM_MAGIC1 &&
                r1.check == cfs_fnv(&r1, (uint32_t)__builtin_offsetof(dm_rec1_t, check))) {
         r.magic = 0;
@@ -106,7 +126,24 @@ static void dm_load(void)
             dmr.swing[i] = 0xFF;
     }
     dmr.last = dmr.last == 1u;
-    dmr.rsv[0] = 0;                              /* (TrapRoot 0.1's 808 line pick, gone) */
+    dmr.rsv[0] = 0;                              /* (Leviathan 0.1's 808 line pick, gone) */
+    {                                            /* (the melody's settings: one out of range, the default's) */
+        static const cf_mel_t D = CF_MEL_DEFAULT;
+        cf_mel_t *M = &dmr.mel;
+        uint32_t j;
+        int bad = M->rhythm >= ML_NR || M->density > 100u || M->contour >= ML_NC || M->rate > 5u || M->range < 5u ||
+                  M->range > 36u || M->tones > 100u || (M->bars != 1u && M->bars != 2u && M->bars != 4u) ||
+                  M->vary > 100u || M->gate < 10u || M->gate > 100u || M->oct < -2 || M->oct > 2 || M->slide > 100u ||
+                  M->accent > 60u;
+        for (j = 0; j < 2u; j++)
+            bad |= M->lfo_w[j] >= ML_NW || M->lfo_r[j] > 5u;
+        for (j = 0; j < ML_NMOD; j++)
+            bad |= M->src[j] >= ML_NS || M->dst[j] >= ML_ND || M->amt[j] < -100 || M->amt[j] > 100;
+        if (bad)
+            *M = D;
+        M->slot %= ML_NMOD;
+        cs_mel = *M;
+    }
     dm_saved = dm_seen = dm_check();
     if (r.magic != DM_MAGIC)                     /* (rc3's: rc4's written once, when it is quiet) */
         dm_saved = 0;
@@ -122,6 +159,7 @@ static void dm_poll_store(uint32_t now)
     if (dm_retry_ms && (int32_t)(now - dm_retry_ms) < 0)
         return;
     dm_retry_ms = 0;
+    dmr.mel = cs_mel;                            /* (Leviathan: the melody's settings kept with the rhythms') */
     h = dm_check();
     if (h != dm_seen) {
         dm_seen = h;
@@ -152,7 +190,9 @@ static void dm_poll_store(uint32_t now)
 }
 static void dm_flush(void)                       /* a backup's LIST: what is not written yet, now */
 {
-    uint32_t h = dm_check();
+    uint32_t h;
+    dmr.mel = cs_mel;
+    h = dm_check();
     dmr.check = h;
     if (dm_store && !dm_restore_lock && h != dm_saved && st_put(OBJ_CFLOOP, &dmr, sizeof dmr, 0u) == 0) {
         dm_saved = h;
@@ -164,8 +204,11 @@ static int dm_rec_ok(const void *raw, uint32_t len)   /* a backup's record of th
 {
     const dm_rec_t *r = (const dm_rec_t *)raw;
     const dm_rec1_t *r1 = (const dm_rec1_t *)raw;
+    const dm_rec2_t *r2 = (const dm_rec2_t *)raw;
     return (len == sizeof(dm_rec_t) && r->magic == DM_MAGIC &&
             r->check == cfs_fnv(r, (uint32_t)__builtin_offsetof(dm_rec_t, check))) ||
+           (len == sizeof(dm_rec2_t) && r2->magic == DM_MAGIC2 &&
+            r2->check == cfs_fnv(r2, (uint32_t)__builtin_offsetof(dm_rec2_t, check))) ||
            (len == sizeof(dm_rec1_t) && r1->magic == DM_MAGIC1 &&
             r1->check == cfs_fnv(r1, (uint32_t)__builtin_offsetof(dm_rec1_t, check)));
 }
@@ -188,7 +231,7 @@ static uint32_t dm_cur(void)
                                                   * PLAY or SELECT switches TIME SIG to its) */
 }
 static uint32_t dm_uid(uint32_t r) { return DM_RHY[r % DM_N].id % DM_NMAX; }   /* (the user's are kept by the id) */
-static int dm_has_drums(uint32_t r)              /* TrapRoot: a rhythm with drums (Rage), not an 808 pattern alone */
+static int dm_has_drums(uint32_t r)              /* Leviathan: a rhythm with drums (Rage), not an 808 pattern alone */
 {
     uint32_t l;
     for (l = 0; l < SQ_NLANE; l++)
@@ -345,7 +388,7 @@ static void dm_select(int d)
     dmr.pos[y->beats & 7u] = y->id;              /* (kept by its id, for its TIME SIG) */
     dmr.last = 1;
     cv_turned(d);
-    if (!cf_sn.ext_clock && y->bpm) {            /* (TrapRoot: an 808 pattern at its own tempo, the one its MIDI was
+    if (!cf_sn.ext_clock && y->bpm) {            /* (Leviathan: an 808 pattern at its own tempo, the one its MIDI was
                                                   * made at; TEMPO turns it after) */
         cs.bpm = y->bpm;
         cf_send_metro();

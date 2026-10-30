@@ -31,7 +31,7 @@
 #include "drum_voice.c"
 #ifdef DRUM_LANE_KNOBS
 #include "drum_synth.c"                  /* CoralFlower's second engine: its kits' lanes play it */
-#include "drum_smp.h"                    /* TrapRoot: the owner's samples, a kit's lanes play them (sq_kit_smp) */
+#include "drum_smp.h"                    /* Leviathan: the owner's samples, a kit's lanes play them (sq_kit_smp) */
 typedef struct { const int16_t *d; uint16_t n, pos; int32_t g; } dsm_voice_t;   /* a sample playing: g its level, Q15 */
 #endif
 
@@ -50,7 +50,7 @@ typedef struct {
             dv_metal_t mb;
         };
         ds_voice_t n;            /* .. or the second engine's voice (drum_synth.c), while eng */
-        dsm_voice_t sm;          /* .. or a sample (TrapRoot), while smp */
+        dsm_voice_t sm;          /* .. or a sample (Leviathan), while smp */
     };
 #else
     dv_coef_t c;
@@ -61,7 +61,7 @@ typedef struct {
     uint8_t role;                /* the drum struck (DVT_*) */
     int8_t st;                   /* its semitones from the designed pitch (the GM map) */
     uint8_t eng;                 /* 0: drum_voice.c's drum; k + 1: the second engine's kit k (drum_synth.c) */
-    uint8_t smp;                 /* TrapRoot: k + 1: sample k (drum_smp.h) plays instead (eng 0 then) */
+    uint8_t smp;                 /* Leviathan: k + 1: sample k (drum_smp.h) plays instead (eng 0 then) */
 } drum_lane_t;
 #ifdef DRUM_LANE_KNOBS
 _Static_assert(sizeof(ds_voice_t) <= sizeof(dv_coef_t) + sizeof(dv_voice_t) + sizeof(dv_metal_t),
@@ -83,7 +83,7 @@ static int16_t drum_lane_knobs[DRUM_NPART][DV_NLANE][9];   /* (8: the second eng
                                                             * drum_voice.c's drum) */
 static uint8_t drum_lane_att[DRUM_NPART][DV_NLANE];   /* .. and its level taken down from the design's: 100 - LEVEL %
                                                        * (0: as designed; CoralFlower: a drum's level, K2) */
-static uint8_t drum_lane_smp[DRUM_NPART][DV_NLANE];   /* TrapRoot: k + 1: the lane plays sample k (0: a drum) */
+static uint8_t drum_lane_smp[DRUM_NPART][DV_NLANE];   /* Leviathan: k + 1: the lane plays sample k (0: a drum) */
 #define DRUM_SMP_GAIN 41000                      /* (a sample at its own level, +2 dB: as loud as the kit's drums by RMS) */
 #endif
 /* knob i (0 KIT .. 7 DRV) of lane `lane` of the part t plays */
@@ -258,7 +258,7 @@ static void drum_note_on(track_t *t, voice_t *v)
     L = &K[lane];
 #ifdef DRUM_LANE_KNOBS
     if (drum_lane_smp[t - trk - DRUM_PART0][lane] && drum_lane_smp[t - trk - DRUM_PART0][lane] <= DRUM_NSMP) {
-        const drum_smp_t *S = &DRUM_SMP[drum_lane_smp[t - trk - DRUM_PART0][lane] - 1u];   /* TrapRoot: a sample */
+        const drum_smp_t *S = &DRUM_SMP[drum_lane_smp[t - trk - DRUM_PART0][lane] - 1u];   /* Leviathan: a sample */
         L->smp = drum_lane_smp[t - trk - DRUM_PART0][lane];
         L->eng = 0;
         L->role = (uint8_t)role;
@@ -351,7 +351,7 @@ static void drum_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const 
     if (!L)
         return;
 #ifdef DRUM_LANE_KNOBS
-    if (L->smp) {                                        /* TrapRoot: the sample, as it is (the kit's knobs do nothing) */
+    if (L->smp) {                                        /* Leviathan: the sample, as it is (the kit's knobs do nothing) */
         if (n > CTL)
             n = CTL;
         for (i = 0; i < n && L->sm.pos < L->sm.n; i++)

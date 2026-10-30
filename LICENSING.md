@@ -30,11 +30,11 @@ The plant's anatomy follows the model of PlantStudio by Paul D. Fernhout and Cyn
 Software, <https://github.com/pdfernhout/PlantStudio>). That covers the phytomers, the phyllotaxis, apical dominance
 and one orientation rule per plant. This is a design reference only: no PlantStudio code is copied.
 
-## TrapRoot's additions
+## Leviathan's additions
 
 | What | Licence | Where |
 | --- | --- | --- |
-| The 808 engine, the trap rhythms, the rolls and the 808 line, the X Rage kit, the rage VA presets, the step-grid DRUMS editor, the fallen angel and her scene (docs/TRAP.md) | GPL-3.0-only | `firmware/src/eng_808.c`, `firmware/src/flora/angel.c`, `firmware/src/flora/angel.h`, `firmware/src/cf_drum.c`, `firmware/src/drum_kits.c`, `firmware/src/eng_va.c`, `firmware/src/cf_seqv.c` |
+| The 808 engine, the trap rhythms, the rolls and the 808 line, the X Rage kit, the rage VA presets, the step-grid DRUMS editor, the fallen angel and her scene (docs/LEVIATHAN.md) | GPL-3.0-only | `firmware/src/eng_808.c`, `firmware/src/flora/angel.c`, `firmware/src/flora/angel.h`, `firmware/src/cf_drum.c`, `firmware/src/drum_kits.c`, `firmware/src/eng_va.c`, `firmware/src/cf_seqv.c` |
 | The owner's 808 patterns (their MIDI files, converted by `tools/trap/mid2lines.py`) and two snare samples, Metro 2 and Mafia (`tools/trap/wav2smp.py`) | supplied by the owner of this fork for it; not covered by this repository's GPL grant unless the owner says so | `firmware/src/dm8_lines.h`, `firmware/src/drum_smp.h` |
 | Surge XT by the Surge Synth Team (<https://surge-synthesizer.github.io/>): design reference for the 808's waveshapers (Soft, Hard, Asym, Sine fold), restated in fixed point; no code copied | GPL-3.0 (Surge XT) | credit only |
 

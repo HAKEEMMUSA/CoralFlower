@@ -154,7 +154,7 @@ static uint32_t step_accents(const step_t *s) { (void)s; return 0; }
 #include "eng_va.c"             /* VA: ChoralRoot's four-oscillator virtual analog (deep pages, its own patch) */
 #endif
 #if FELUCCA_808
-#include "eng_808.c"            /* 808: TrapRoot's trap bass (engine 11, NOISE's slot; docs/TRAP.md) */
+#include "eng_808.c"            /* 808: Leviathan's trap bass (engine 11, NOISE's slot; docs/LEVIATHAN.md) */
 #endif
 
 /* the editor protocol, user presets and projects store these indices: append, never reorder */
@@ -213,7 +213,7 @@ static const engine_t *const ENGINES[NENGINES] = {
 #if FELUCCA_NOISE
     &ENG_NOISE,                  /* 11 */
 #elif FELUCCA_808
-    &ENG_808,                    /* 11 (ENGI_808): TrapRoot's 808, in NOISE's slot */
+    &ENG_808,                    /* 11 (ENGI_808): Leviathan's 808, in NOISE's slot */
 #else
     &ENG_GONE,                   /* 11: reserved (NOISE, retired: FELUCCA_NOISE 0) */
 #endif
@@ -281,7 +281,7 @@ static const uint8_t ENGINE_ORDER[NENG_SHOWN] = {
     11,                          /* NOISE */
 #endif
 #if FELUCCA_808
-    ENGI_808,                    /* 808 (TrapRoot) */
+    ENGI_808,                    /* 808 (Leviathan) */
 #endif
 #if FELUCCA_SLICE
     13,                          /* SLICE */

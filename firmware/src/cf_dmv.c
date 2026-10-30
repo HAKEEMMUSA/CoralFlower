@@ -70,7 +70,7 @@ static void dm_draw_help(void)
         draw_chip_text(18, Y_VIEW + 9 + i * 14, L[i], FL_INK);
 }
 
-/* TrapRoot: an 808 pattern alone (no drums), as a piano roll: two bars at a time (the pair playing), a note a bar from
+/* Leviathan: an 808 pattern alone (no drums), as a piano roll: two bars at a time (the pair playing), a note a bar from
  * its tick to the next note's (one-shot, as it sounds), higher for a higher note, brighter for a louder one; a slide
  * joined to the note it glides from; where it plays, a line */
 static void dm8_roll(const dm8_line_t *L, int x0, int x1, int y0, int y1, int play)
@@ -138,7 +138,7 @@ static void view_drum(int x0)
     wn = nb < 2u ? nb : 2u;
     wb = play ? (cf_sn.dm_bar & ~1u) % nb : 0u;
     steps = wn * sd;
-    nl += L != 0;                                /* (TrapRoot: the 808, a row of its own under the drums) */
+    nl += L != 0;                                /* (Leviathan: the 808, a row of its own under the drums) */
     row = nl <= 4u ? 16 : nl <= 6u ? 13 : 9;
     for (l = 0; l < SQ_NLANE; l++) {
         int yr = yt + k * row;
@@ -231,7 +231,7 @@ static void draw_drum(void)
     kint(a, y->bars, 0);
     str_cpy(t + str_len(t), a, sizeof t - str_len(t));
     str_cpy(t + str_len(t), y->bars > 1u ? " bars  ~" : " bar  ~", sizeof t - str_len(t));
-    kint(a, y->bpm, 0);                          /* (its tempo: TrapRoot sets TEMPO to it when it is picked, dm_select) */
+    kint(a, y->bpm, 0);                          /* (its tempo: Leviathan sets TEMPO to it when it is picked, dm_select) */
     str_cpy(t + str_len(t), a, sizeof t - str_len(t));
     str_cpy(t + str_len(t), " BPM", sizeof t - str_len(t));
     fb_text_halo(&CF_FONT_UI, cv_head_x, HEAD_LINE, t, C_ACC(1), FL_BG, 1);

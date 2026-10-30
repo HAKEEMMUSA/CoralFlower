@@ -18,24 +18,24 @@ typedef struct {
     uint8_t bpm;                 /* the tempo its style lives at (shown, never set: the tempo is the user's) */
     const char *lane[SQ_NLANE];  /* each drum's hits, bar after bar; 0: the drum is not in it */
     uint8_t lev[SQ_NLANE];       /* .. its level, 0..100 % (a pattern's dlev) */
-    uint8_t line;                /* TrapRoot: its 808 pattern (DM8_LINES index + 1; 0 none): while it plays the bass part
+    uint8_t line;                /* Leviathan: its 808 pattern (DM8_LINES index + 1; 0 none): while it plays the bass part
                                   * plays it (cf_play.c cfp_sync: the keys only set its root) */
 } dm_rhythm_t;
 
-/* TrapRoot: the 808 patterns (dm8_lines.h, generated from the owner's MIDI files by tools/trap/mid2lines.py; Rage's
+/* Leviathan: the 808 patterns (dm8_lines.h, generated from the owner's MIDI files by tools/trap/mid2lines.py; Rage's
  * one hit from their FL Studio pattern): each note at its own tick, its velocity, a slide or not, one-shot */
 #include "dm8_lines.h"
-/* TrapRoot: a hit's character in a lane: 'x' a hit, 'X' an accent, 'o' a ghost note, '2' '3' '4' '6' '8' a roll of
+/* Leviathan: a hit's character in a lane: 'x' a hit, 'X' an accent, 'o' a ghost note, '2' '3' '4' '6' '8' a roll of
  * that many hits inside the step (the trap hat rolls; the pattern's DRUMS keep its first hit) */
 
 /* the kits by name (SQ_KITS' order) */
 enum { DMK_STD, DMK_808, DMK_909, DMK_TIGHT, DMK_BOOM, DMK_LOFI, DMK_HAND, DMK_CRUSH, DMK_XCLUB, DMK_XDEEP, DMK_XLOFI,
        DMK_XLIVE, DMK_XTECH, DMK_XBREAK, DMK_XRAGE };
 
-/* CoralFlower's own rhythms are out of TrapRoot (ids 0 .. 47 are the 808 patterns' now: a KIT or SWING a CoralFlower
+/* CoralFlower's own rhythms are out of Leviathan (ids 0 .. 47 are the 808 patterns' now: a KIT or SWING a CoralFlower
  * user kept on one of theirs lands on an 808 pattern, where neither does anything) */
 static const dm_rhythm_t DM_RHY[] = {
-    /* TrapRoot (the owner, 2026-10-30: "Aside from the rage lets remove the other ones ... the rhythms should only be
+    /* Leviathan (the owner, 2026-10-30: "Aside from the rage lets remove the other ones ... the rhythms should only be
      * just 808 patterns"): Rage, its drums and its 808; then the owner's 808 patterns, the 808 alone (DM8_RHYTHMS) */
     /* Rage: the owner's pick (an FL Studio pattern at 180 BPM, read from its channel rack): no kick, the 808 is the
      * low end and hits once every two bars; the snare on 1, 7, 13 and 21, 27 (the rage bounce), the clap on 3 of each
@@ -82,7 +82,7 @@ static uint32_t dm_mask(uint32_t r, uint32_t l, uint32_t b)
     uint32_t sd = dm_steps(y->beats), i, m = 0, lb;
     if (!s || b >= y->bars)
         return 0;
-    lb = str_len(s) / sd;                        /* (TrapRoot: a lane shorter than the rhythm plays round) */
+    lb = str_len(s) / sd;                        /* (Leviathan: a lane shorter than the rhythm plays round) */
     if (!lb)
         return 0;
     s += (b % lb) * sd;
@@ -116,7 +116,7 @@ static uint32_t dmp_tick_of(uint32_t i)          /* where step i sounds: every s
         t += dmp.swing * (bt / sd) / 200u;
     return t;
 }
-/* TrapRoot: a step's character (above: x X o, a roll's count), the velocity it strikes with */
+/* Leviathan: a step's character (above: x X o, a roll's count), the velocity it strikes with */
 static char dm_char(uint32_t r, uint32_t l, uint32_t b, uint32_t i)
 {
     const dm_rhythm_t *y = &DM_RHY[r % DM_N];
@@ -141,7 +141,7 @@ static void dm_strike(uint32_t l, uint32_t vel)
     sqp.lane_t[l] = cf_now_ms;
 }
 
-/* ------------------------------------------------- TrapRoot: the 808 line --- */
+/* ------------------------------------------------- Leviathan: the 808 line --- */
 /* the bass part plays the rhythm's 808 pattern, tick by tick (dm8_tick): each note the bass the keys would play
  * (dm8.root: the last chord's, kept while no key is down; none yet: the key's tonic), put in the 808's own octave (C1 ..
  * B1), plus the note's interval; at its velocity; one-shot, until the next note (dm8.left); a slide glides into its note
@@ -292,12 +292,12 @@ static void dmp_start(uint32_t r, uint32_t kit, uint32_t swing)
         for (l = 0; l < SQ_NLANE; l++)
             dmroll[l].n = 0;
     }
-    if (dm8_active())                            /* (TrapRoot: the 808 line takes the bass from the keys) */
+    if (dm8_active())                            /* (Leviathan: the 808 line takes the bass from the keys) */
         cfp_sync(1);
     cfm_restart();
     cfm.running = 1;
     dmp_now();
-    dm8.ix = 0;                                  /* (TrapRoot: the 808 pattern from its top) */
+    dm8.ix = 0;                                  /* (Leviathan: the 808 pattern from its top) */
     dm8.last = 0;
     dm8_tick();
 }
@@ -336,7 +336,7 @@ static void dmp_next_bar(void)
         dmp.next = 0xFF;
         dmp.bar = 0;
         dmp.nbar = 0;
-        if (dm8_active() && cfp.nb)              /* (TrapRoot: one with an 808 line takes the bass from the keys) */
+        if (dm8_active() && cfp.nb)              /* (Leviathan: one with an 808 line takes the bass from the keys) */
             cfp_sync(1);
         if (DM_RHY[dmp.r % DM_N].beats != cfm.beats) {   /* (a rhythm of another TIME SIG: it comes with it, here at
                                                   * the bar line; the UI takes it into cs.beats, cf_dmui.c dm_poll) */

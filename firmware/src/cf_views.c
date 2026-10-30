@@ -177,7 +177,7 @@ static void draw_piano(int x, int y, int lo, int octs, int wk, int h, uint8_t (*
  * framed. Each knob's choices in a row, the one taken marked */
 static void cv_backdrop_thumb(int x, int y, int w, int h, uint32_t bd, int on)
 {
-    int coral = 0, i;                            /* (TrapRoot: the angel's night sky, whatever the layout) */
+    int coral = 0, i;                            /* (Leviathan: the angel's night sky, whatever the layout) */
     uint8_t base = FL_L0;
     fb_rect(x, y, w, h, FL_BG);
     if (bd != FL_BD_NONE)
@@ -1245,16 +1245,96 @@ static int cv_arp_k(int mode, int len, int i)   /* the arpeggiator's walk (cf_ar
     default: return i % len;
     }
 }
+/* Leviathan: Melody's picture: the phrase about to play as a piano roll (two bars, the pair playing), over the chord
+ * held (none: the key's triad), from the same code that plays it (cf_mel.c ml_gen); the note playing lit. Under it, the
+ * page's part of the engine: what the rhythm and pitch layers do, the LFOs, the matrix slot */
+static void view_mel(int x0)
+{
+    const cf_mel_t *M = &cs_mel;
+    int run = cf_sn.arp_on && cf_sn.mel_n, xa = x0 + 4, xb = x0 + 214, yt = VIEW_Y - 4, h = 52, i, lo = 127, hi = 0;
+    uint8_t note[CF_MAX_NOTES], prev = 0, nn[32], on[32], len[32];
+    uint32_t n, root, bars = M->bars ? M->bars : 1u, base = 0, k;
+    char t[32];
+    if (run) {
+        n = cf_sn.mel_n;
+        for (i = 0; i < (int)n; i++)
+            note[i] = cf_sn.mel_note[i];
+        root = cf_sn.mel_root;
+        base = (cf_sn.mel_k / 32u) * 32u;
+    } else {
+        int tn = 60 + (cs.chord.quantize != CF_Q_OFF ? cs.chord.tonic : 0);
+        n = 3;
+        note[0] = (uint8_t)tn;
+        note[1] = (uint8_t)(tn + (cs.chord.scale == CF_SC_MINOR || cs.chord.scale == CF_SC_MIN_PENT ? 3 : 4));
+        note[2] = (uint8_t)(tn + 7);
+        root = (uint32_t)tn % 12u;
+    }
+    (void)bars;
+    for (k = 0; k < 32u; k++) {                  /* the two bars' notes */
+        ml_ev_t e;
+        ml_gen(M, note, n, root, base + k, base + k, prev, cs.vel, &e);
+        on[k] = e.on;
+        nn[k] = e.note;
+        len[k] = (uint8_t)(e.len24 / 6u ? e.len24 / 6u : 1u);
+        if (e.on) {
+            prev = e.note;
+            lo = e.note < lo ? e.note : lo;
+            hi = e.note > hi ? e.note : hi;
+        }
+    }
+    if (hi < lo) {
+        lo = 60;
+        hi = 72;
+    }
+    if (hi - lo < 12) {
+        lo -= (12 - (hi - lo)) / 2;
+        hi = lo + 12;
+    }
+    for (i = 0; i <= 8; i++)                     /* the beats, the bar line brighter */
+        fb_rect(xa + i * (xb - xa) / 8, yt, 1, h, i == 4 ? FL_C(FL_R_ORCHID, 2) : FL_BG2);
+    for (k = 0; k < 32u; k++) {
+        int x = xa + (int)k * (xb - xa) / 32, w = (int)len[k] * (xb - xa) / 32 - 1, y;
+        int lit = run && base + k == cf_sn.mel_k;
+        if (!on[k])
+            continue;
+        y = yt + h - 4 - (nn[k] - lo) * (h - 8) / (hi - lo);
+        fb_rect(x, y - 1, w < 2 ? 2 : w, 3, lit ? C_ACC(0) : run ? C_ACC(2) : FL_INK3);
+        fb_rect(x, y - 2, 2, 5, lit ? FL_INK : run ? C_ACC(1) : FL_INK2);
+    }
+    if (cf_sn.mel_latched) {
+        fb_rbox(x0 + 164, VIEW_Y + 50, 44, 11, 2, C_ACC(1));
+        fb_text_c(&CF_FONT_UI, x0 + 186, VIEW_Y + 49, "LATCH", FL_BG, 1);
+    }
+    switch (cu.page[SCR_ARP] % CF_MEL_NPG) {     /* (what the page moves, in a line) */
+    case 0: str_cpy(t, "rhythm layer: ", sizeof t); str_cpy(t + 14, CF_MEL_RHY[M->rhythm % ML_NR], 18); break;
+    case 1: str_cpy(t, "pitch layer: ", sizeof t); str_cpy(t + 13, CF_MEL_CON[M->contour % ML_NC], 19); break;
+    case 2: str_cpy(t, "SEED: another phrase", sizeof t); break;
+    case 3: str_cpy(t, "[PRESETS] its sound", sizeof t); break;
+    case 4: str_cpy(t, "two LFOs for the matrix", sizeof t); break;
+    default:
+        str_cpy(t, CF_MEL_SRC[M->src[M->slot % ML_NMOD] % ML_NS], sizeof t);
+        str_cpy(t + str_len(t), " \x82 ", sizeof t - str_len(t));   /* (\x82: an arrow, gen_pixfont.py) */
+        str_cpy(t + str_len(t), CF_MEL_DST[M->dst[M->slot % ML_NMOD] % ML_ND], sizeof t - str_len(t));
+        break;
+    }
+    fb_text_halo(&CF_FONT_UI, x0 + 6, VIEW_Y + 62, !cu.arp_on ? "off: turn ON/OFF to play it" : run || cu.page[SCR_ARP] ?
+                 t : "hold a chord: a melody over it", FL_INK3, FL_BG, 1);
+}
+
 static void view_arp(int x0)
 {
     const int mode = cs.arp.mode % CF_ARP_NMODES, run = cf_sn.arp_on && cf_sn.arp_n;
+    if (mode == CF_ARP_MELODY) {                 /* (Leviathan) */
+        view_mel(x0);
+        return;
+    }
     int n, i, oc = cs.arp.oct >= 1 && cs.arp.oct <= 4 ? cs.arp.oct : 1, len, lo = 127, hi = 0, sw = 12;
     int xa = x0 + 12, yt = VIEW_Y + 2, h = 40, cur = run ? (int)((cf_sn.arp_idx + 15u) % 16u) : -1;
     uint8_t note[CF_MAX_NOTES], seq[16];
     static const char *const WHAT[CF_ARP_NMODES] = {"low to high, over and over", "high to low, over and over",
         "up and down, the ends twice", "up and down, the ends once", "a random note each step",
         "root, 3rd, 5th.. as built", "each note twice, upward", "every chord strummed up",
-        "every chord strummed down"};
+        "every chord strummed down", "a melody over the chord"};
     if (run) {
         n = cf_sn.arp_n;
         for (i = 0; i < n; i++)

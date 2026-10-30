@@ -18,6 +18,8 @@
 enum { CF_RT_WAIT = 0, CF_RT_STRIKE = 1, CF_RT_MOVE = 2, CF_RT_CHORD = 3, CF_NRT };   /* RETRIG (stored: 0 and 1
                                                                                     * were Off and On) */
 
+#include "cf_mel.h"                                   /* (Leviathan: the melody engine's settings, cf_mel.c) */
+
 typedef struct {                /* the arpeggiator's settings (ARP; cf_arp.c) */
     uint8_t mode;               /* CF_ARP_* */
     uint8_t oct;                /* 1..4 octaves */
@@ -27,7 +29,7 @@ typedef struct {                /* the arpeggiator's settings (ARP; cf_arp.c) */
     uint8_t latch;
     uint8_t strum_ms;           /* Strum: 5..250 ms between the notes */
 } cf_arp_t;
-#define CF_ARP_DEFAULT {0, 1, 4, 70, 50, 0, 40}
+#define CF_ARP_DEFAULT {9, 1, 4, 70, 50, 0, 40}   /* (Leviathan: MODE Melody, CF_ARP_MELODY) */
 
 typedef struct {                /* the looper's settings up to 0.3.1: unused since 0.4 has no looper, kept so the
                                  * settings record keeps its layout */
@@ -69,6 +71,7 @@ typedef struct {
     uint8_t notes_in;           /* GLO > MIDI > NOTES IN (CF_NI_*): notes in play the parts directly
                                  * (Direct), else they go to the UI as the FM-1's keys or as roots (cf_out.c cf_xq) */
     uint8_t in_ch;              /* .. the channel those two take notes from: 0 every one, 1..16 (GLO > MIDI > IN CH) */
+    cf_mel_t mel;               /* Leviathan: the melody engine (ARP in Melody; cf_mel.c) */
 } cf_play_cfg_t;
 
 /* the beat grid the arpeggiator locks to while the metronome's clock runs (cf_out.c cfm_tick writes it): on, where it
@@ -361,7 +364,7 @@ static void cfp_change(uint32_t part, uint8_t *old, uint8_t *pn, const uint8_t *
 
 #include "cf_arp.c"                                  /* (the arpeggiator: cfa_chord, cfa_tick, cfa_config) */
 
-/* TrapRoot: a rhythm with an 808 line plays the bass part (cf_drum.c dm8_*): while it plays, the chords only set the
+/* Leviathan: a rhythm with an 808 line plays the bass part (cf_drum.c dm8_*): while it plays, the chords only set the
  * note its hits strike (the bass the keys would play), the keys strike no bass themselves */
 static int dm8_active(void);
 static void dm8_target(const uint8_t *nb, int mb);
@@ -382,7 +385,7 @@ static int cfp_bass_calc(const cf_chord_out_t *o, uint8_t out[2])
         b -= 12;
     out[n++] = (uint8_t)b;
     if (cfp_cfg.octaver && b + 12 <= 120 && trk[1].p[P_VOICE] == V_POLY)   /* the octaver: the same note an octave up
-                                                 * (not under a one-voice bass: TrapRoot's 808) */
+                                                 * (not under a one-voice bass: Leviathan's 808) */
         out[n++] = (uint8_t)(b + 12);
     return n;
 }
@@ -502,7 +505,7 @@ static void cfp_sync(int how)
                 cfp.slast = o->note[i];
         }
     }
-    if (dm8_active()) {                              /* (TrapRoot: the 808 line strikes the bass; the keys set it) */
+    if (dm8_active()) {                              /* (Leviathan: the 808 line strikes the bass; the keys set it) */
         dm8_target(nb, mb);
         if (cfp.nb)
             cfp_change(1, cfp.bass, &cfp.nb, nb, 0, 1);
@@ -545,6 +548,26 @@ static void cfp_config(void)                         /* CFE_CONFIG: the UI's set
     cfc.keep = cfp_cfg.retrig == CF_RT_WAIT;
     cf_chord_config(&cfc, &cfc_shadow);
     cfa_config(cfc.out.sounding);
+    {                                                /* Leviathan: the melody on or off (ARP on, MODE Melody or not):
+                                                      * in Melody part 0 holds the chord itself, else the ARP plays it */
+        uint8_t mnow = cfa.on && cfp_cfg.arp.mode == CF_ARP_MELODY, mwas = cfa_melw;
+        cfa_melw = mnow;
+        if (mnow != mwas && cfa.on == was) {
+            if (mwas)                                /* (Melody -> an arpeggio: the chord part 0 held goes) */
+                for (i = 0; i < cfp.n; i++)
+                    cfp_off(cfp_cp, cfp.note[i]);
+            cfa_stop();
+            mel_stop();
+            cfp.n = 0;
+            cfp_sync(1);
+            return;
+        }
+        if (cfa.on != was && !cfa.on && mwas) {      /* (ARP off from Melody: the chord it held goes, sync plays it) */
+            mel_stop();
+            for (i = 0; i < cfp.n; i++)
+                cfp_off(cfp_cp, cfp.note[i]);
+        }
+    }
     if (cfa.on != was) {                             /* ARP switched: part 0's notes go to the arpeggiator, or back */
         if (cfa.on)
             for (i = 0; i < cfp.n; i++)
@@ -561,6 +584,7 @@ static void cfp_panic(void)
 {
     uint32_t i;
     cfa_stop();
+    mel_stop();
     cf_chord_reset(&cfc);
     cf_chord_config(&cfc, &cfc.cfg);
     for (i = 0; i < cfp.n; i++)

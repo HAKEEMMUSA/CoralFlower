@@ -14,8 +14,9 @@
  * BPM, a 64-bit count: no drift). */
 
 enum { CF_ARP_UP, CF_ARP_DOWN, CF_ARP_INC, CF_ARP_EXC, CF_ARP_RAND, CF_ARP_ORDER, CF_ARP_REPEAT, CF_ARP_STRUM_UP,
-       CF_ARP_STRUM_DOWN, CF_ARP_NMODES };
-#define CF_ARP_STRUMMING(m) ((m) >= CF_ARP_STRUM_UP)
+       CF_ARP_STRUM_DOWN, CF_ARP_MELODY, CF_ARP_NMODES };   /* (Leviathan: Melody, cf_mel.c; a track's ARP plays it Up) */
+#define CF_ARP_STRUMMING(m) ((m) == CF_ARP_STRUM_UP || (m) == CF_ARP_STRUM_DOWN)
+static uint8_t cfa_melw;                             /* (cf_play.c cfp_config: the melody was on) */
 /* RATE: a step, in 1/24 beat (a quarter note: 24) */
 static const uint8_t CF_ARP_UNITS[] = {96, 48, 24, 16, 12, 8, 6, 4, 3};
 #define CF_ARP_NRATES ((uint32_t)sizeof CF_ARP_UNITS)
@@ -173,6 +174,8 @@ static uint32_t cfa_div64(uint64_t n, uint32_t d)
     return q;
 }
 
+#include "cf_mel.c"                                  /* (Leviathan: the melody engine, ARP's Melody mode) */
+
 static void cfa_step_n(uint64_t len)
 {
     int nt = cfa_pick(cfa.idx);
@@ -231,6 +234,10 @@ static int cfa_chord(const cf_chord_out_t *o, int m)
     int i, j, fresh;
     if (!cfa.on)
         return 0;
+    if (cfa_at == &cfa_k && cfp_cfg.arp.mode == CF_ARP_MELODY) {   /* Melody: part 0 holds the chord, the melody */
+        mel_chord(o, m);                                           /* plays over it on the LAYER */
+        return 0;
+    }
     if (!m) {
         if (cfp_cfg.arp.latch && cfa.n) {            /* LATCH: the chord goes on */
             cfa.latched = 1;
@@ -287,6 +294,13 @@ static int cfa_chord(const cf_chord_out_t *o, int m)
 /* every audio block: the clocked steps and their gates, the strum's next notes */
 static void cfa_tick(uint32_t n)
 {
+    if (cfa_at == &cfa_k && (mel.n || mel.cur)) {    /* (Leviathan: the melody's steps and its last note's gate) */
+        if (cfa.on && cfp_cfg.arp.mode == CF_ARP_MELODY)
+            mel_tick(n);
+        else
+            mel_stop();
+        return;
+    }
     if (!cfa.on || !cfa.n)
         return;
     if (CF_ARP_STRUMMING(cfp_cfg.arp.mode)) {
@@ -337,11 +351,15 @@ static void cfa_config(int keys_down)
 {
     if (cfp_cfg.arp_on != cfa.on) {
         cfa_stop();
+        if (cfa_at == &cfa_k)
+            mel_stop();
         cfa.on = cfp_cfg.arp_on;
         cfa.rng = 0x2545F491u ^ cf_now_ms;
         return;                                      /* (cfp_config re-plays the chord the keys hold) */
     }
     if (!cfa.on)
+        return;
+    if ((cfp_cfg.arp.mode == CF_ARP_MELODY) != cfa_melw)   /* (into or out of Melody: cfp_config does it) */
         return;
     if (CF_ARP_STRUMMING(cfp_cfg.arp.mode) != CF_ARP_STRUMMING(cfa.mode)) {
         uint8_t n = cfa.n, latched = cfa.latched;

@@ -503,7 +503,7 @@ static const uint8_t VAP_REESE[] = {OSC(0, SAW, 70, 0, -14), OSC(1, SAW, 70, 0, 
     FLT(LP, 50, 16, 10), VA_DRIVE, 30, ENV1(2, 90, 120, 50), LFO(0, 34, 0, 127, 0), LFO(1, 26, 1, 127, 0),
     M_(0, VS_LFO1, VD_CUT, 8), M_(1, VS_LFO1 + 1, VD_PIT1, 2), 0xFF};
 
-/* TrapRoot's (docs/TRAP.md): melody sounds for trap, rage and plugg. RAGE SAW: four saws detuned wide (FINE and DETUNE,
+/* Leviathan's (docs/LEVIATHAN.md): melody sounds for trap, rage and plugg. RAGE SAW: four saws detuned wide (FINE and DETUNE,
  * the stereo filter SPREAD), bright, a slow vibrato: the supersaw of the rage leads (after Surge XT's Modern / classic
  * unison saws, in the VA's four oscillators). KEN LEAD: a mono square and a saw an octave up, driven, a late vibrato.
  * ICE BELL: sines an octave and two up, ring-modulated, no sustain. DARK PLUCK: two saws and a sub square, a closed
@@ -513,7 +513,7 @@ static const uint8_t VAP_REESE[] = {OSC(0, SAW, 70, 0, -14), OSC(1, SAW, 70, 0, 
 static const uint8_t VAP_RAGESAW[] = {OSC(0, SAW, 56, 0, -12), OSC(1, SAW, 56, 0, 12), OSC(2, SAW, 50, 0, -5),
     OSC(3, SAW, 46, 12, 5), FLT(LP, 100, 12, 10), VA_FKTRK, 64, VA_FSPREAD, 110, VA_DETUNE, 70,
     ENV1(2, 90, 110, 72), ENV2(0, 80, 70, 72), VA_VEL, 40, LFO(0, 84, 0, 20, 90), M_(0, VS_LFO1, VD_PITCH, 2), 0xFF};
-static const uint8_t VAP_KENLEAD[] = {OSC(0, SQR, 80, 0, 0), O_(0, SHAPE), 20, OSC(1, SAW, 60, 12, 6),
+static const uint8_t VAP_KENLEAD[] = {OSC(0, SQR, 56, 0, 0), O_(0, SHAPE), 20, OSC(1, SAW, 42, 12, 6),
     FLT(LP, 92, 30, 18), VA_DRIVE, 40, ENV1(0, 85, 110, 60), ENV2(0, 70, 40, 60), LFO(0, 88, 0, 30, 96),
     M_(0, VS_LFO1, VD_PITCH, 4), 0xFF};
 static const uint8_t VAP_ICEBELL[] = {OSC(0, SIN, 70, 0, 0), OSC(1, SIN, 40, 24, 0), OSC(2, SIN, 0, 12, 4),
@@ -526,10 +526,49 @@ static const uint8_t VAP_FLUTE[] = {OSC(0, TRI, 70, 0, 0), OSC(1, SIN, 24, 12, 0
 static const uint8_t VAP_HYPERPAD[] = {OSC(0, SAW, 60, 0, -14), OSC(1, SAW, 60, 0, 14), OSC(2, SAW, 46, 12, -6),
     OSC(3, PWM, 40, -12, 0), FLT(LP, 70, 20, 10), VA_FSPREAD, 100, VA_DETUNE, 80, ENV1(70, 90, 118, 100),
     ENV2(80, 100, 60, 100), LFO(0, 40, 1, 60, 0), M_(0, VS_LFO1, VD_CUT, 10), 0xFF};
-static const uint8_t VAP_SIREN[] = {OSC(0, SAW, 80, 0, -8), OSC(1, SAW, 80, 0, 8), FLT(LP, 96, 40, 0), VA_DRIVE, 60,
+static const uint8_t VAP_SIREN[] = {OSC(0, SAW, 46, 0, -8), OSC(1, SAW, 46, 0, 8), FLT(LP, 96, 40, 0), VA_DRIVE, 40,
     ENV1(0, 80, 120, 50), LFO(0, 92, 0, 24, 0), M_(0, VS_LFO1, VD_PITCH, 6), 0xFF};
 static const uint8_t VAP_PLUGGKEYS[] = {OSC(0, TRI, 90, 0, 0), OSC(1, SQR, 40, 12, 0), O_(1, SHAPE), 50,
     FLT(LP, 66, 10, 30), ENV1(0, 92, 40, 70), ENV2(0, 80, 10, 70), VA_VEL, 80, M_(0, VS_VEL, VD_CUT, 18), 0xFF};
+
+/* Leviathan's (docs/LEVIATHAN.md): melody leads built as two layers, after Serum's and Electra X's (an A and a B
+ * oscillator pair, each its own envelope through the matrix) and Surge XT's routings. Layer A is OSC 1 + 2 (ENV 1's
+ * sustain), layer B OSC 3 + 4 (a pluck or a swell of its own, ENV 3 on their levels through the matrix):
+ * LEVIATHAN: A two MORPH saws whose shapes an LFO pulls apart (a wavetable's position), B a ring-modulated bell two
+ * octaves up struck by ENV 3; velocity opens the filter, a S&H pans. ABYSS BELL: A a sine and a triangle an octave up,
+ * B a ring-modulated bell (a twelfth and two octaves) that fades first, a late vibrato. SYNC SERPENT: A a hard-synced
+ * saw whose pitch ENV 3 sweeps down (the sync sweep) and an LFO moves, B a square an octave down, driven. TIDE PLUCK:
+ * A two saws plucked through a resonant filter, B a sine sub and a breath of white noise on the attack; each note's
+ * cutoff a little different (RANDOM). KRAKEN KEYS: A a pulse whose width an LFO sweeps and a saw an octave up, B a
+ * ring-modulated metal partial struck by ENV 3. HYDRA SAW: A two saws wide, B two MORPH saws an octave up whose shapes
+ * move apart; a pitch blip on the attack (ENV 3), a late vibrato, the stereo filter spread */
+static const uint8_t VAP_LEVIATHAN[] = {OSC(0, SAW, 58, 0, -10), MODE(0, MORPH), O_(0, SHAPE), 64,
+    OSC(1, SAW, 52, 0, 10), MODE(1, MORPH), O_(1, SHAPE), 70, OSC(2, SIN, 6, 24, 0), OSC(3, SIN, 6, 12, 3),
+    VA_RING4, 1, FLT(LP, 88, 18, 20), VA_FKTRK, 60, VA_FSPREAD, 70, ENV1(2, 90, 100, 70), ENV2(0, 70, 40, 70),
+    ENV3(0, 74, 0, 70), VA_VEL, 50, LFO(0, 30, 1, 127, 0), LFO(1, 60, 4, 127, 0),
+    M_(0, VS_LFO1, VD_SHP1, 22), M_(1, VS_LFO1, VD_SHP1 + 1, -22), M_(2, VS_ENV1 + 2, VD_LVL1 + 2, 32),
+    M_(3, VS_ENV1 + 2, VD_LVL1 + 3, 24), M_(4, VS_VEL, VD_CUT, 15), M_(5, VS_LFO1 + 1, VD_PAN, 12), 0xFF};
+static const uint8_t VAP_ABYSSBELL[] = {OSC(0, SIN, 40, 0, 0), OSC(1, TRI, 15, 12, 0), OSC(2, SIN, 0, 19, 0),
+    OSC(3, SIN, 0, 24, 4), VA_RING4, 1, FLT(LP, 110, 0, 0), ENV1(0, 100, 30, 92), ENV3(0, 60, 0, 70), VA_VEL, 80,
+    LFO(0, 80, 0, 25, 95), M_(0, VS_ENV1 + 2, VD_LVL1 + 2, 38), M_(1, VS_ENV1 + 2, VD_LVL1 + 3, 38),
+    M_(2, VS_LFO1, VD_PITCH, 3), M_(3, VS_VEL, VD_LVL1 + 3, 20), 0xFF};
+static const uint8_t VAP_SYNCSERP[] = {OSC(0, SAW, 32, 0, 0), OSC(1, SAW, 52, 0, 0), VA_SYNC2, 1,
+    OSC(2, SQR, 26, -12, 0), FLT(LP, 80, 25, 25), VA_DRIVE, 30, ENV1(0, 85, 100, 60), ENV2(0, 72, 30, 60),
+    ENV3(0, 70, 0, 60), VA_VEL, 50, LFO(0, 50, 1, 127, 0), M_(0, VS_ENV1 + 2, VD_PIT1 + 1, 63),
+    M_(1, VS_LFO1, VD_PIT1 + 1, 12), M_(2, VS_VEL, VD_CUT, 15), 0xFF};
+static const uint8_t VAP_TIDEPLUCK[] = {OSC(0, SAW, 80, 0, -6), OSC(1, SAW, 70, 12, 6), OSC(2, SIN, 50, -12, 0),
+    O_(3, WAVE), VN_WHITE, MODE(3, NOISE), O_(3, LEVEL), 0, O_(3, KTRK), 0, FLT(LP, 44, 40, 45), VA_FSPREAD, 60,
+    ENV1(0, 84, 0, 64), ENV2(0, 66, 0, 60), ENV3(0, 40, 0, 40), VA_VEL, 80, M_(0, VS_ENV1 + 2, VD_LVL1 + 3, 40),
+    M_(1, VS_RAND, VD_CUT, 12), M_(2, VS_VEL, VD_FENV, 15), 0xFF};
+static const uint8_t VAP_KRAKEN[] = {OSC(0, PWM, 78, 0, 0), O_(0, SHAPE), 40, OSC(1, SAW, 44, 12, 5),
+    OSC(2, SIN, 0, 7, 0), OSC(3, SIN, 0, 19, 0), VA_RING4, 1, FLT(LP, 76, 20, 30), ENV1(0, 92, 50, 76),
+    ENV2(0, 78, 20, 70), ENV3(0, 62, 0, 60), VA_VEL, 70, LFO(0, 56, 1, 127, 0), M_(0, VS_LFO1, VD_SHP1, 30),
+    M_(1, VS_ENV1 + 2, VD_LVL1 + 2, 28), M_(2, VS_ENV1 + 2, VD_LVL1 + 3, 28), M_(3, VS_VEL, VD_CUT, 14), 0xFF};
+static const uint8_t VAP_HYDRA[] = {OSC(0, SAW, 56, 0, -14), OSC(1, SAW, 56, 0, 14), OSC(2, SAW, 44, 12, -7),
+    MODE(2, MORPH), O_(2, SHAPE), 60, OSC(3, SAW, 44, 12, 7), MODE(3, MORPH), O_(3, SHAPE), 66, FLT(LP, 96, 14, 12),
+    VA_FKTRK, 64, VA_FSPREAD, 110, VA_DETUNE, 60, ENV1(0, 90, 110, 70), ENV2(0, 80, 60, 70), ENV3(0, 30, 0, 30),
+    VA_VEL, 40, LFO(0, 40, 0, 127, 0), LFO(1, 84, 0, 20, 90), M_(0, VS_ENV1 + 2, VD_PITCH, 14),
+    M_(1, VS_LFO1, VD_SHP1 + 2, 20), M_(2, VS_LFO1, VD_SHP1 + 3, -20), M_(3, VS_LFO1 + 1, VD_PITCH, 2), 0xFF};
 
 /* {CUT, RES, FENV, DRIVE, MIX, DTN, ATK, REL}: the macros as the patch has them (cr_va_test checks) */
 static const preset_t VA_PRESETS[] = {
@@ -570,23 +609,32 @@ static const preset_t VA_PRESETS[] = {
     {"ACID BASS", {34, 96, 48, 40, 64, 0, 0, 36}, {0, 80, 90, 36}, 0, 1, FX(0, 0, 15, 10), PAT(1)},
     {"WOOD BASS", {50, 10, 30, 0, 64, 0, 0, 50}, {0, 88, 30, 50}, 0, 1, FX(0, 0, 10, 15), PAT(2)},
     {"REESE BASS", {50, 16, 10, 30, 64, 0, 2, 50}, {2, 90, 120, 50}, 0, 1, FX(0, 0, 10, 10), PAT(2)},
-    /* TrapRoot's (above): chord and lead sounds for trap, rage and plugg */
+    /* Leviathan's (above): chord and lead sounds for trap, rage and plugg */
     {"RAGE SAW", {100, 12, 10, 0, 64, 70, 2, 72}, {2, 90, 110, 72}, 0, 0, FX(0, 40, 30, 70), PAT(4)},
     {"KEN LEAD", {92, 30, 18, 40, 64, 0, 0, 60}, {0, 85, 110, 60}, 0, 0, FX(25, 10, 40, 50), PAT(4)},
     {"ICE BELL", {120, 0, 0, 0, 64, 0, 0, 90}, {0, 100, 0, 90}, 0, 0, FX(0, 30, 45, 70), PAT(7)},
     {"DARK PLUCK", {40, 30, 50, 0, 64, 0, 0, 60}, {0, 78, 0, 60}, 0, 0, FX(0, 20, 40, 55), PAT(6)},
     {"TRAP FLUTE", {84, 20, 10, 0, 64, 0, 30, 70}, {30, 80, 110, 70}, 0, 0, FX(0, 20, 30, 70), PAT(4)},
     {"HYPER PAD", {70, 20, 10, 0, 64, 80, 70, 100}, {70, 90, 118, 100}, 0, 0, FX(0, 60, 25, 80), PAT(5)},
-    {"SIREN", {96, 40, 0, 60, 64, 0, 0, 50}, {0, 80, 120, 50}, 0, 0, FX(40, 10, 30, 40), PAT(4)},
+    {"SIREN", {96, 40, 0, 40, 64, 0, 0, 50}, {0, 80, 120, 50}, 0, 0, FX(40, 10, 30, 40), PAT(4)},
     {"PLUGG KEYS", {66, 10, 30, 0, 64, 0, 0, 70}, {0, 92, 40, 70}, 0, 0, FX(0, 35, 30, 55), PAT(6)},
+    /* Leviathan's (above): the melody's dual-layer leads */
+    {"LEVIATHAN", {88, 18, 20, 0, 64, 0, 2, 70}, {2, 90, 100, 70}, 0, 0, FX(0, 30, 35, 65), PAT(4)},
+    {"ABYSS BELL", {110, 0, 0, 0, 64, 0, 0, 92}, {0, 100, 30, 92}, 0, 0, FX(0, 25, 40, 70), PAT(7)},
+    {"SYNC SERPENT", {80, 25, 25, 30, 64, 0, 0, 60}, {0, 85, 100, 60}, 0, 0, FX(0, 15, 35, 50), PAT(4)},
+    {"TIDE PLUCK", {44, 40, 45, 0, 64, 0, 0, 64}, {0, 84, 0, 64}, 0, 0, FX(0, 25, 40, 60), PAT(13)},
+    {"KRAKEN KEYS", {76, 20, 30, 0, 64, 0, 0, 76}, {0, 92, 50, 76}, 0, 0, FX(0, 35, 30, 55), PAT(6)},
+    {"HYDRA SAW", {96, 14, 12, 0, 64, 60, 0, 70}, {0, 90, 110, 70}, 0, 0, FX(0, 40, 30, 70), PAT(4)},
 };
 static const uint8_t *const VA_PRESET_EDITS[] = {VAP_LUSH, VAP_WARM, VAP_GLASS, VAP_SLOWSTR, VAP_ENSEMBLE, VAP_BRASS,
     VAP_SOFTBRASS, VAP_POLYKEYS, VAP_PWMKEYS, VAP_CLAV, VAP_SOFTLEAD, VAP_HOLLOW, VAP_BELLS, VAP_SWEEP, VAP_AAH,
     VAP_ORGAN, VAP_SUB, VAP_PUNCH, VAP_RUBBER, VAP_SYNCBASS, VAP_MORPHPAD, VAP_VINYLKEYS, VAP_WIDESTR, VAP_CLOUD,
     VAP_SHIMMER, VAP_BREATH, VAP_TAPESTR, VAP_AURORA, VAP_GLOWPLUCK, VAP_DREAMBELL, VAP_HAZE, VAP_STARKEYS, VAP_PWMPAD,
     VAP_FATBASS, VAP_ACID, VAP_WOODBASS, VAP_REESE, VAP_RAGESAW, VAP_KENLEAD, VAP_ICEBELL, VAP_DARKPLUCK, VAP_FLUTE,
-    VAP_HYPERPAD, VAP_SIREN, VAP_PLUGGKEYS};
-_Static_assert(NELEM(VA_PRESETS) == NELEM(VA_PRESET_EDITS) && NELEM(VA_PRESETS) == 45, "a patch per VA preset (TrapRoot: 37 + 8)");
+    VAP_HYPERPAD, VAP_SIREN, VAP_PLUGGKEYS, VAP_LEVIATHAN, VAP_ABYSSBELL, VAP_SYNCSERP, VAP_TIDEPLUCK, VAP_KRAKEN,
+    VAP_HYDRA};
+_Static_assert(NELEM(VA_PRESETS) == NELEM(VA_PRESET_EDITS) && NELEM(VA_PRESETS) == 51,
+               "a patch per VA preset (37 + Leviathan's 8 + Leviathan's 6)");
 #define VA_NPRESETS ((uint32_t)NELEM(VA_PRESETS))
 #undef O_
 #undef E_

@@ -1,20 +1,25 @@
-# TrapRoot
+# Leviathan
 
-TrapRoot is CoralFlower for trap, rage and plugg production (Ken Carson, Playboi Carti, Destroy Lonely, the Opium
+Leviathan is CoralFlower for trap, rage and plugg production (Ken Carson, Playboi Carti, Destroy Lonely, the Opium
 sound, Atlanta trap). It keeps CoralFlower's instrument and its look: scale keys and chord buttons, the bass, the
 arpeggiator, the sequencer and its song, the rhythm machine, the effects, the sound editor, the pixel screens. It adds:
 
+- **A melody engine** on the ARP button (MODE **Melody**): your chord keeps sounding while a melody plays over it on
+  the LAYER, in time. It is built like a synth: a rhythm layer and a pitch layer, each an oscillator with its own
+  algorithms, two LFOs and a four-slot modulation matrix.
+- **Six dual-layer leads** for it, LEVIATHAN first: two oscillator pairs with their own envelopes and LFO and
+  envelope routings in the VA engine's matrix.
 - **An 808 engine** on the bass: a tuned kick-bass with pitch punch, a long tail, slides, and six waveshapers from a
-  clean sub to a blown-out rage 808. Ten presets, first in the bass list.
+  clean sub to a blown-out rage 808. Eleven presets, HEAVY first, first in the bass list.
 - **A rhythm machine of 808 patterns**: **Rage** (drums and an 808), then 33 of your own 808 MIDI patterns, the 808
   alone, each note at its own tick and velocity, with its slides and rolls, over the root of the chord you play.
 - **Your two snares**, Metro 2 and Mafia, played as the samples they are on the X Rage kit's snare and clap.
 - **Eight rage leads** for the chords and the layer: RAGE SAW, KEN LEAD, ICE BELL, DARK PLUCK, TRAP FLUTE, HYPER PAD,
   SIREN, PLUGG KEYS.
 - **A fallen angel** in the flower's place, who reacts to your chords and turns demonic as the song plays.
-- **The DRUMS editor in a step-grid layout**: the drum picked big, four drums by 16 steps.
+- **The DRUMS editor in a step-grid layout**: the drum picked big, bars 1 and 2 at once, four drums by 16 steps each.
 
-> **Status: untested on hardware.** TrapRoot is built and checked on a computer: CoralFlower's host tests, its stuck-note
+> **Status: untested on hardware.** Leviathan is built and checked on a computer: CoralFlower's host tests, its stuck-note
 > fuzz test and its browser-emulator test all pass. The browser build plays bit for bit like the native one. The device
 > package is built by GitHub Actions with JieLi's toolchain (below). Keep a backup and know CoralFlower's recovery path
 > before you install.
@@ -23,11 +28,11 @@ arpeggiator, the sequencer and its song, the rhythm machine, the effects, the so
 
 1. Fork CoralFlower on GitHub and push this tree to it.
 2. Open **Actions → release → Run workflow** and enter a version such as `0.1`. The workflow fetches JieLi's toolchain,
-   builds and keeps the package as the run's artifact (`coralflower-0.1.fwsc`; its version string is `TrapRoot 0.1`).
+   builds and keeps the package as the run's artifact (`coralflower-0.1.fwsc`; its version string is `Leviathan 0.1`).
 3. Install it as CoralFlower installs a candidate: the web installer's "Choose a .fwsc file", or
    `python3 tools/fm1_install.py coralflower-0.1.fwsc`.
 
-TrapRoot keeps CoralFlower's identity (`FM-1_930`), so CoralFlower's installer, backups and settings work with it, and
+Leviathan keeps CoralFlower's identity (`FM-1_930`), so CoralFlower's installer, backups and settings work with it, and
 installing CoralFlower again takes it back.
 
 ## Making a beat
@@ -43,6 +48,64 @@ installing CoralFlower again takes it back.
 5. **EDIT** on Rage makes it a pattern and opens its drums to edit (below); an 808 pattern has no drums to edit. REC
    records a take over any rhythm, as in CoralFlower.
 6. **SELECT on HOME** changes the 808 (the bass sound); **PRESETS** changes the chord sound.
+
+## The melody engine
+
+**ARP** opens its page; **K1** (ON/OFF) turns it on. On a new unit MODE is already **Melody**. Hold a chord on HOME
+(a chord button and a root): the chord sounds as it always does, and a melody plays over it on the LAYER part with
+its own sound. It runs on 16ths, on the beat while a rhythm, a pattern or the metronome plays, else from your first
+chord. When the chord changes, the melody keeps its shape and moves to the new chord. LATCH (the ARP's Feel page, in
+another mode) keeps it playing after you let go.
+
+It is built the way Serum, Electra X and Surge XT build a sound, but for notes:
+
+- **The rhythm layer** decides when a note starts. Its algorithms: **Euclid** (hits spread evenly), **Bounce** (3-3-2
+  and its pickups), **Drive** (on the beat, then 8ths, then 16ths), **Sync** (off the beat), **Rage** (the rage leads'
+  stabs) and **Random**. **DENSITY** sets how many of a bar's 16 steps play.
+- **The pitch layer** decides which note. A contour oscillator (**Sine**, **Tri**, **Rise**, **Fall**, **Square**,
+  **Steps**, **Walk** or **Arp**) runs at a **RATE** of cycles per phrase over a **RANGE** above the chord's root.
+  Its value lands on the nearest chord tone on the beats, and on **TONES** % of the other steps; the rest take the
+  nearest scale tone (the key's scale, or the chord's own minor or major with Quantize off).
+- **Two LFOs** (Sine, Tri, Saw, Square, S&H), a quarter bar to eight bars a cycle, on the phrase's clock.
+- **A four-slot modulation matrix.** Each slot takes a source (LFO 1, LFO 2, **Ramp** the phrase's position,
+  **Chord** a fall over a bar from each new chord, **Random** each step's own, **Beat** the beats, **Height** the last
+  note's place in the range) times an amount (-100 to +100) onto a destination (**Density**, **Pitch**, **Range**,
+  **Octave**, **Gate**, **Velo**, **Slide**, **Tones**, **Rotate** the rhythm, **Rate** the contour's).
+
+A phrase is **BARS** long (1, 2 or 4) and plays again; **VARY** % of its steps change on each repeat. **SEED** picks
+another phrase: the same settings, seed and chord always give the same notes, so the screen shows what will play, as a
+piano roll of the two bars playing. **GATE** is each note's length as a share of the gap to the next, **SLIDE** the
+share of notes that glide in legato, **ACCENT** the velocity added on the beats, **OCTAVE** moves the range.
+
+| Page | K1 | K2 | K3 | K4 |
+| --- | --- | --- | --- | --- |
+| Pattern | ON/OFF | MODE | RHYTHM | DENSITY |
+| Pitch | CONTOUR | RATE | RANGE | TONES |
+| Phrase | BARS | VARY | GATE | SEED |
+| Voice | OCTAVE | SLIDE | ACCENT | TEMPO |
+| LFOs | LFO 1 | RATE 1 | LFO 2 | RATE 2 |
+| Matrix | SLOT | SOURCE | DEST | AMOUNT |
+
+SELECT turns the pages. **PRESETS** on this page changes the melody's sound (the LAYER's). The default matrix: LFO 1
+(a triangle over two bars) bends the pitch contour, the beats get louder, and a random octave jump now and then.
+The settings are kept with the rhythm machine's, over a power-off.
+
+### The melody's sounds
+
+Six VA leads made for it, each two layers. Layer A is oscillators 1 and 2 on the main envelope; layer B is
+oscillators 3 and 4 with an envelope of their own (ENV 3 on their levels through the VA matrix):
+
+| Sound | Layer A | Layer B | Matrix |
+| --- | --- | --- | --- |
+| **LEVIATHAN** (the default) | two MORPH saws | a ring-modulated bell two octaves up, struck | an LFO pulls the saws' shapes apart (a wavetable position), velocity opens the filter, S&H pans |
+| **ABYSS BELL** | a sine and a triangle an octave up | a ring-modulated bell that fades first | a late vibrato, velocity on the bell |
+| **SYNC SERPENT** | a hard-synced saw | a square an octave down | ENV 3 sweeps the synced saw down (the sync sweep), an LFO moves it |
+| **TIDE PLUCK** | two saws plucked through a resonant filter | a sine sub and a breath of white noise on the attack | each note's cutoff a little different (Random) |
+| **KRAKEN KEYS** | a pulse whose width an LFO sweeps, a saw an octave up | a ring-modulated metal partial, struck | velocity on the cutoff |
+| **HYDRA SAW** | two saws wide | two MORPH saws an octave up, their shapes moving apart | a pitch blip on the attack, a late vibrato |
+
+They are in every VA sound list, so they work as chord sounds too. The sound editor (EDIT) shows their oscillators,
+envelopes, LFOs and matrix slots on its pages.
 
 ### Rage
 
@@ -179,7 +242,11 @@ sky, moon, clouds and fire are drawn in code. It is about 3 KB smaller than the 
 - The tempo starts at 180 BPM (Rage's). The interface colour starts on **Blood** (CoralFlower's Coral ramp, renamed).
 - The sequencer's marks are trap marks instead of flowers: a chord an ice diamond, a bass note a drop, a drum a flame,
   the layer a star, on wine-red stems.
-- The splash says TrapRoot; the version string is `TrapRoot X.Y`.
+- The ARP button's MODE has **Melody** (the default), the melody engine (`cf_mel.c`); its settings are kept in the
+  rhythm machine's record.
+- Six dual-layer leads added to the VA engine; the LAYER's sound starts on LEVIATHAN. KEN LEAD and SIREN were too hot
+  for six-note chords (the VA test caught it) and are levelled.
+- The splash says Leviathan; the version string is `Leviathan X.Y`. (It was TrapRoot before 0.1's release.)
 
 ## Building and testing
 
@@ -197,9 +264,9 @@ The host tests of `.github/workflows/check.yml` (cf_backup_test, cf_chord_test, 
 
 ## Credits
 
-TrapRoot is built on [CoralFlower](https://github.com/FicusFicusov/CoralFlower) (its instrument, screens, rhythm machine
+Leviathan is built on [CoralFlower](https://github.com/FicusFicusov/CoralFlower) (its instrument, screens, rhythm machine
 and pixel style), [ChoralRoot FM-1](https://github.com/Quixotic7/ChoralRootFM1) and
 [Felucca](https://github.com/hugelton/Felucca). The 808's models follow [Surge XT](https://surge-synthesizer.github.io/)'s
-waveshaper set, rewritten in fixed point (no Surge code is copied). TrapRoot is GPL-3.0-only, like everything it is built
+waveshaper set, rewritten in fixed point (no Surge code is copied). Leviathan is GPL-3.0-only, like everything it is built
 on. It is independent of and unaffiliated with M-VAVE, the Surge Synth Team and the artists named here, whose names
 only describe a style.

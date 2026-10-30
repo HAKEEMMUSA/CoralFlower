@@ -1,4 +1,4 @@
-/* TrapRoot: the fallen angel at the centre of the screen (in place of CoralFlower's plant and coral, behind the same
+/* Leviathan: the fallen angel at the centre of the screen (in place of CoralFlower's plant and coral, behind the same
  * flora_* calls, so every screen that showed the plant shows her).
  *
  * A kneeling angel, her hands together, wrapped in her own wings while nothing plays. Chords open her: each chord tone
@@ -97,7 +97,7 @@ void flora_note_on(flora_t *f, uint8_t note, uint8_t vel);
 void flora_set_level(flora_t *f, uint16_t level); /* master loudness, 0..65535 */
 void flora_tick(flora_t *f, uint32_t dt_ms);
 void flora_render(flora_t *f, flc_t *c);
-/* TrapRoot's own: something plays (a rhythm, a pattern, the song): she falls as it goes on; an 808 (a bass) hit */
+/* Leviathan's own: something plays (a rhythm, a pattern, the song): she falls as it goes on; an 808 (a bass) hit */
 void flora_set_playing(flora_t *f, int on);
 void flora_thump(flora_t *f, uint8_t vel);
 /* her fall, 0 .. 65536 (the screens may show it; a test may set it) */
