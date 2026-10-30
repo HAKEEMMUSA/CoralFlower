@@ -673,6 +673,7 @@ typedef struct {
     uint8_t sq_dn, sq_dnote[6], sq_droot, sq_dsingle, sq_dser, sq_bn, sq_bass[2];   /* .. the CHORDS track's chord
                                   * for HOME (cf_seqp.c sqp.dn ..), the bass sounding */
     uint16_t sq_dmask;
+    uint32_t dm_nbar;            /* (TrapRoot: the rhythm's bars since it began: where its 808 line is) */
     uint8_t dm_on, dm_r, dm_next, dm_bar, dm_rin;   /* the drum machine: a rhythm plays, which, the next, its bar;
                                   * REC in the SEQUENCER waits for its bar line (pattern + 1) */
     uint32_t dm_t, dm_left;      /* .. ticks into its bar; ticks till REC in's pattern takes over */
@@ -742,6 +743,7 @@ static void cf_snapshot(void)
     cf_sn.dm_r = dmp.r;
     cf_sn.dm_next = dmp.next;
     cf_sn.dm_bar = dmp.bar;
+    cf_sn.dm_nbar = dmp.nbar;
     cf_sn.dm_t = dmp.t;
     cf_sn.dm_rin = dmp.on ? dmp.rin : 0u;
     cf_sn.dm_left = dmp.rin ? (dmp.rbars - 1u) * sqp_bar_ticks() + (sqp_bar_ticks() - dmp.t) : 0u;

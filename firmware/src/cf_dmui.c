@@ -51,6 +51,7 @@ static void dm_defaults(void)
     memset(dmr.pos, 0xFF, sizeof dmr.pos);
     dmr.magic = DM_MAGIC;
     dmr.last = 1;                                /* (TrapRoot: PLAY on HOME plays a rhythm, the first: Rage) */
+    dm8_sel = 0;                                 /* (rsv[0]: each rhythm's own 808 line) */
 }
 /* rc3's record: its rhythms had the ids 0 .. 28 in its list's order (cf_drum.c kept them), so its tweaks are by id
  * already; the rhythm stood on was a place in a TIME SIG's list: 4/4's 0 .. 19, then two each in 3/4, 2/4, 5/4, 6/8
@@ -106,6 +107,9 @@ static void dm_load(void)
             dmr.swing[i] = 0xFF;
     }
     dmr.last = dmr.last == 1u;
+    if (dmr.rsv[0] != 0xFFu && dmr.rsv[0] > DM8_N)   /* (TrapRoot: the 808 line ALGORITHM picked; out of range: own) */
+        dmr.rsv[0] = 0;
+    dm8_sel = dmr.rsv[0];
     dm_saved = dm_seen = dm_check();
     if (r.magic != DM_MAGIC)                     /* (rc3's: rc4's written once, when it is quiet) */
         dm_saved = 0;
@@ -360,6 +364,31 @@ static void dm_page_play(void)                   /* PLAY in the drum machine */
     dmr.last = 1;
     dm_sig_for(dm_cur());                        /* (picked in another TIME SIG while a pattern played: now) */
     dm_play(dm_cur());
+}
+
+/* TrapRoot: ALGORITHM in the rhythm machine: the 808 line under every rhythm: Own (each rhythm's), one of DM8_LINES,
+ * or None, in that order; kept with the rhythm machine's settings (dm_rec_t rsv[0]: 0 own, k line k, 0xFF none) */
+static const char *dm8_name(uint32_t sel, uint32_t r)
+{
+    uint32_t k = sel == 0u ? DM_RHY[r % DM_N].line : sel == 0xFFu ? 0u : sel;
+    return k && k <= DM8_N ? DM8_LINES[k - 1u].name : "None";
+}
+static void dm_algo(int d)
+{
+    int at = dmr.rsv[0] == 0xFFu ? (int)DM8_N + 1 : (int)dmr.rsv[0], n = (int)DM8_N + 2;
+    char m[32];
+    at = (at + d % n + n) % n;
+    dmr.rsv[0] = (uint8_t)(at == (int)DM8_N + 1 ? 0xFF : at);
+    dm8_sel = dmr.rsv[0];
+    str_cpy(m, "808: ", sizeof m);
+    if (!dmr.rsv[0]) {
+        str_cpy(m + str_len(m), "own (", sizeof m - str_len(m));
+        str_cpy(m + str_len(m), dm8_name(0, dm_cur()), sizeof m - str_len(m));
+        str_cpy(m + str_len(m), ")", sizeof m - str_len(m));
+    } else {
+        str_cpy(m + str_len(m), dm8_name(dmr.rsv[0], dm_cur()), sizeof m - str_len(m));
+    }
+    cf_message(m);
 }
 
 /* ---------------------------------------------- HOME and the other pages --- */

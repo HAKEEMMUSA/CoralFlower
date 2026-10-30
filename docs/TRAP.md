@@ -65,7 +65,33 @@ pitch falls two octaves, as the reference does in its first 70 ms. With DECAY at
 falls about 14 dB a second like the reference one-shot, whether or not the key is still down. In a rhythm's 808 line
 the root sits in the 808's own octave, C1 to B1 (33 to 62 Hz), whatever octave the keys are in.
 
-### The 808 line
+### The 808 lines
+
+The 808 lines come from your MIDI files: Spinz 1-4, Forsaken, King, Bitcrush, OhMyGawd, LuhTwizz, Chase, Chichi,
+Quis, Bounce, Secret and SF RT, plus Rage's. Each keeps its own phrase length (2, 4 or 8 bars), its intervals, its
+slides and its rolls (the "spinz": up to 8 fading hits inside a 16th). Secret's triplets sit on the nearest 16ths.
+Each rhythm has its own line. **ALGORITHM** in the rhythm machine picks the line for every rhythm instead: Own (each
+rhythm's), any line, or None. The choice is kept with the rhythm machine's settings and named under the rhythm
+(`[ALGO] Spinz 2`). The rhythm view shows two bars at a time, the pair playing, with the line's own pair under them.
+
+| Rhythm | Its 808 line |
+| --- | --- |
+| Rage | Rage (one hit every two bars) |
+| Atlanta | Chase |
+| Carti | Bounce |
+| Opium | Spinz 2 |
+| Plugg | Bitcrush |
+| Memphis | Quis |
+| TrapDrill | Spinz 4 |
+| Rolls | Spinz 3 |
+| GTR | Chichi |
+| Moet | LuhTwizz |
+
+**GTR** (~140 BPM) and **Moet** (~98 BPM) are your two drum loops, transcribed to 4 bars. GTR has a half-time snare
+and clap and 8th hats with 32nd-note rolls. Moet has its kick on syncopated 16ths, the snare on 3 with pickups, and
+16th hats.
+
+### How the 808 line plays
 
 A rhythm with an 808 line plays the bass part while it runs. Each hit strikes the note the keys' bass would play (the
 last chord's; kept while no key is down), plus the step's interval (octaves, fifths and sevenths in the factory lines).

@@ -78,12 +78,19 @@ static void view_drum(int x0)
     uint32_t r = dm_cur(), sd, nb, steps, l, b, i, nl = 0;
     const dm_rhythm_t *y = &DM_RHY[r % DM_N];
     int gx = x0 + 34, gw = 216 - 34, row, yt = VIEW_Y - 2, k = 0, play = dm_plays(r);
+    const dm8_line_t *L = dm8_line_of(r);
+    uint32_t wb, wn, lw = 0;
     sd = dm_steps(y->beats);                     /* (its own TIME SIG: one picked from another shows its bars) */
     nb = y->bars ? y->bars : 1u;
-    steps = nb * sd;
+    /* (TrapRoot: two bars at a time, the pair playing; the 808 line's own pair under them) */
+    wn = nb < 2u ? nb : 2u;
+    wb = play ? (cf_sn.dm_bar & ~1u) % nb : 0u;
+    if (L && play)
+        lw = (cf_sn.dm_nbar % (L->bars ? L->bars : 1u)) & ~1u;
+    steps = wn * sd;
     for (l = 0; l < SQ_NLANE; l++)
         nl += y->lane[l] != 0;
-    nl += y->b808 != 0;                          /* (TrapRoot: the 808 line, a row of its own under the drums) */
+    nl += L != 0;                                /* (TrapRoot: the 808 line, a row of its own under the drums) */
     row = nl <= 4u ? 16 : nl <= 6u ? 13 : 9;
     for (l = 0; l < SQ_NLANE; l++) {
         int yr = yt + k * row;
@@ -94,14 +101,14 @@ static void view_drum(int x0)
                                                   * the DRUMS editor's keys; the hand kit's congas and clave) */
         draw_drum_icon(x0 + 3, yr + 8, sq_lane_pic(l, dm_kit(r)), FL_INK2);
         fb_hline(gx, yr + SQG_GND + 1, gw, FL_BG3);
-        for (b = 0; b < nb; b++) {
-            uint32_t m = dm_mask(r, l, b);
+        for (b = 0; b < wn; b++) {
+            uint32_t bb = (wb + b) % nb, m = dm_mask(r, l, bb);
             for (i = 0; i < sd; i++) {
                 int s = (int)(b * sd + i), cw = gw / (int)steps, cx = gx + s * gw / (int)steps + cw / 2;
                 if (i & 1u)
                     cx += (int)dm_swing(r) * cw / 200;
                 if ((m >> i) & 1u) {
-                    uint32_t rn = dm_roll(dm_char(r, l, b, i));
+                    uint32_t rn = dm_roll(dm_char(r, l, bb, i));
                     sq_flower(cx, yr, cw, 2, sq_lane_ink(l), 0);
                     if (rn)                      /* (a roll: a bar over the flame, as long as its hits) */
                         fb_rect(cx - (int)rn / 2, yr + 1, (int)rn, 1, FL_C(FL_R_FIRE, 0));
@@ -111,8 +118,10 @@ static void view_drum(int x0)
             }
         }
     }
-    if (y->b808) {                               /* the 808 line: a drop a hit, a slide joined to the note before */
+    if (L && sd == 16u) {                        /* the 808 line: a drop a hit, a slide joined to the note before, a
+                                                  * roll a bar over it */
         int yr = yt + k * row, px = -1;
+        uint32_t len = str_len(L->hit);
         sq_ink_t ink;
         ink.ramp = FL_R_ROSE;
         ink.eye = FL_R_FIRE;
@@ -120,29 +129,32 @@ static void view_drum(int x0)
         fb_rect(x0 - 6, yr + 6, 26, 7, FL_BG);
         fb_text(&CF_FONT_UI, x0 - 4, yr + 3, "808", FL_INK2, 1);
         fb_hline(gx, yr + SQG_GND + 1, gw, FL_BG3);
-        for (i = 0; i < steps && y->b808[i]; i++) {
+        for (i = 0; i < steps; i++) {
+            uint32_t at = lw * 16u + i;
             int cw = gw / (int)steps, cx = gx + (int)i * gw / (int)steps + cw / 2;
-            char ch = y->b808[i];
+            char ch = at < len ? L->hit[at] : '.';
             if ((i % sd) & 1u)
                 cx += (int)dm_swing(r) * cw / 200;
-            if (ch != 'x' && ch != 's') {
+            if (ch == '.') {
                 fb_rect(cx, yr + SQG_GND, 1, 1, FL_BG3);
                 continue;
             }
             if (ch == 's' && px >= 0)
                 fb_hline(px, yr + SQG_GND - 1, cx - px, FL_C(FL_R_ROSE, 1));
             sq_flower(cx, yr, cw, 1, ink, 0);
+            if (ch >= '2' && ch <= '8')
+                fb_rect(cx - (ch - '0') / 2, yr + 1, ch - '0', 1, FL_C(FL_R_FIRE, 0));
             px = cx;
         }
     }
-    if (nb > 1u) {                               /* (the second bar begins: a dashed line) */
+    if (wn > 1u) {                               /* (the second bar begins: a dashed line) */
         int xb = gx + (int)sd * gw / (int)steps - 1;
         int yy;
         for (yy = yt; yy < yt + k * row; yy += 4)
             fb_rect(xb, yy, 1, 2, FL_C(FL_R_ORCHID, 2));
     }
     if (play && cf_sn.sq_bt) {                   /* (playing: where it is) */
-        uint32_t pos = cf_sn.dm_bar * sd * 256u + cf_sn.dm_t * sd * 256u / cf_sn.sq_bt;
+        uint32_t pos = (cf_sn.dm_bar - wb) * sd * 256u + cf_sn.dm_t * sd * 256u / cf_sn.sq_bt;
         int xc = gx + (int)(pos * (uint32_t)gw / (steps * 256u));
         fb_rect(xc, yt - 2, 1, k * row + 2, FL_C(FL_R_FIRE, 1));
     }
@@ -188,7 +200,12 @@ static void draw_drum(void)
     str_cpy(t + str_len(t), " BPM", sizeof t - str_len(t));
     fb_text_halo(&CF_FONT_UI, cv_head_x, HEAD_LINE, t, C_ACC(1), FL_BG, 1);
     draw_view(view_drum);
-    draw_chip_text_c(Y_VIEW + H_VIEW - 14, "[EDIT] make it a pattern", FL_INK3);   /* (rc5: the page's main use, on
+    {                                            /* (TrapRoot: the 808 line ALGORITHM picks, beside EDIT's use) */
+        char c[40];
+        str_cpy(c, "[EDIT] pattern  [ALGO] ", sizeof c);
+        str_cpy(c + str_len(c), dm8_name(dmr.rsv[0], r), sizeof c - str_len(c));
+        draw_chip_text_c(Y_VIEW + H_VIEW - 14, c, FL_INK3);
+    }   /* (rc5: the page's main use, on
                                                   * it; the owner on rc4: "потерялась функция чтобы вставить барабаны из
                                                   * драм-машины в паттерны") */
     if (squ.help || squ.help_hold)
